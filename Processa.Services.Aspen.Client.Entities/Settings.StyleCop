@@ -1,0 +1,48 @@
+<StyleCopSettings Version="105">
+  <GlobalSettings>
+    <StringProperty Name="Culture">es-MX</StringProperty>
+  </GlobalSettings>
+  <Analyzers>
+    <Analyzer AnalyzerId="StyleCop.CSharp.DocumentationRules">
+      <Rules>
+        <Rule Name="PropertySummaryDocumentationMustMatchAccessors">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="ElementDocumentationMustBeSpelledCorrectly">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="ConstructorSummaryDocumentationMustBeginWithStandardText">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="DestructorSummaryDocumentationMustBeginWithStandardText">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+      </Rules>
+      <AnalyzerSettings />
+    </Analyzer>
+    <Analyzer AnalyzerId="StyleCop.CSharp.NamingRules">
+      <Rules>
+        <Rule Name="StaticReadonlyFieldsMustBeginWithUpperCaseLetter">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+      </Rules>
+      <AnalyzerSettings>
+        <CollectionProperty Name="Hungarian">
+          <Value>db</Value>
+          <Value>ip</Value>
+          <Value>kv</Value>
+        </CollectionProperty>
+      </AnalyzerSettings>
+    </Analyzer>
+  </Analyzers>
+</StyleCopSettings>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="StyleCop.Cache" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Processa.Services.Aspen.Client.Fluent\Properties\AssemblyVersion.cs" Link="Properties\AssemblyVersion.cs" />
+  </ItemGroup>
+
+</Project>
