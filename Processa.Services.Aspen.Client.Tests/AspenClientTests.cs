@@ -429,7 +429,7 @@ namespace Processa.Services.Aspen.Client.Tests
             HttpStatusCode expectedStatusCode, 
             string expectedMessagePattern)
         {
-            Assert.That(expectedStatusCode, Is.EqualTo(exception.StatusCode));
+            Assert.That(exception.StatusCode, Is.EqualTo(expectedStatusCode));
             StringAssert.AreEqualIgnoringCase(expectedEventId, exception.EventId);
             StringAssert.IsMatch(Regex.Escape(expectedMessagePattern), exception.Message);
         }
