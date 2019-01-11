@@ -37,7 +37,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <summary>
         /// Para uso interno.
         /// </summary>
-        public AppScope AppScope { get; private set; }
+        private readonly ICustomHeaderManager customHeaderManager;
 
         /// <summary>
         /// Para uso interno.
@@ -63,11 +63,6 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Para uso interno.
         /// </summary>
         private readonly INonceGenerator nonceGenerator;
-
-        /// <summary>
-        /// Para uso interno.
-        /// </summary>
-        private readonly ICustomHeaderManager customHeaderManager;
 
         /// <summary>
         /// Para uso interno.
@@ -115,11 +110,6 @@ namespace Processa.Services.Aspen.Client.Fluent
         private RestClient restClient;
 
         /// <summary>
-        /// Para uso interno.
-        /// </summary>
-        public IDeviceInfo DeviceInfo { get; private set; }
-
-        /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="AspenClient"/>
         /// </summary>
         /// <param name="settings">Configuración de inicialización.</param>
@@ -139,19 +129,76 @@ namespace Processa.Services.Aspen.Client.Fluent
         }
 
         /// <summary>
+        /// Para uso interno.
+        /// </summary>
+        public AppScope AppScope { get; private set; }
+        
+        /// <summary>
         /// Obtiene el token de autenticación emitido para la sesión.
         /// </summary>        
         public IAuthToken AuthToken { get; private set; }
 
         /// <summary>
-        /// Inicializa on objeto que permite la conexión con el sistema Aspen.
+        /// Para uso interno.
         /// </summary>
+        public IDeviceInfo DeviceInfo { get; private set; }
+        
+        /// <summary>
+        /// Inicializa un objeto que permite la conexión con el sistema Aspen.
+        /// </summary>        
         /// <param name="settings">Configuración de inicialización, o <see langword="null" /> para utilizar los valores predeterminados.</param>
-        /// <returns>Instancia de <see cref="IEndPointSettings"/> que permite establecer la configuración de conexión.</returns>
-        public static IEndPointSettings Initialize(ISettings settings = null)
+        /// <returns>Instancia de <see cref="IEndPointSettings" /> que permite establecer la configuración de conexión.</returns>
+        public static IEndPointSettings Initialize(ISettings settings)
         {
-            settings = settings ?? new DefaultSettings();
+            Throw.IfNull(settings, nameof(settings));
             return new AspenClient(settings);
+        }
+
+        /// <summary>
+        /// Inicializa un objeto que permite la conexión con el sistema Aspen.
+        /// </summary>
+        /// <param name="appScope">Alcance de la aplicación que se está conectando.</param>
+        /// <returns>Instancia de <see cref="IEndPointSettings" /> que permite establecer la configuración de conexión.</returns>
+        public static IEndPointSettings Initialize(AppScope appScope = AppScope.Autonomous)
+        {
+            var customSettings = new DefaultSettings(appScope);
+            return new AspenClient(customSettings);
+        }
+
+        /// <summary>
+        /// Agrega las cabeceras necesarias para el procesamiento de la solicitud.
+        /// </summary>
+        /// <param name="request">Instancia de la solicitud a donde se agregan las cabeceras.</param>
+        /// <param name="customPayload">Valores que se desean agregar al PayLoad de la solicitud o ; <see langword="null" /> para no agregar valores adicionales.</param>
+        public void AddRequiredHeaders(IRestRequest request, IDictionary<string, object> customPayload = null)
+        {
+            this.payload = new Dictionary<string, object>
+            {
+                { this.nonceGenerator.Name, this.nonceGenerator.GetNonce() },
+                { this.epochGenerator.Name, this.epochGenerator.GetSeconds() }
+            };
+
+            if (customPayload != null)
+            {
+                foreach (KeyValuePair<string, object> element in customPayload)
+                {
+                    this.payload.Add(element.Key, element.Value);
+                }
+            }
+
+            if (this.AuthToken != null)
+            {
+                this.payload.Add("Token", this.AuthToken.Token);
+
+                if (this.AuthToken is UserAuthToken context)
+                {
+                    this.payload.Add("DeviceId", context.DeviceId);
+                    this.payload.Add("Username", context.Username);
+                }
+            }
+
+            this.customHeaderManager.AddApiKeyHeader(request, this.identityProvider);
+            this.customHeaderManager.AddPayloadHeader(request, this.encoder, this.payload, this.identityProvider);
         }
 
         /// <summary>
@@ -293,6 +340,19 @@ namespace Processa.Services.Aspen.Client.Fluent
         }
 
         /// <summary>
+        /// Obtiene el cupero que se está enviando con la solicitud (en formato Json).
+        /// </summary>
+        /// <param name="parameters">Parámetros de la solicitud.</param>
+        /// <returns>Cadena en formato JSON con el cuerpo de la solicitud o <see langword="null" /> si no se envian datos en el cuerpo.</returns>
+        private static string GetBody(IEnumerable<Parameter> parameters)
+        {
+            Parameter body = parameters.FirstOrDefault(item => item.Type == ParameterType.RequestBody);
+            return body != null ?
+                JsonConvert.SerializeObject(body.Value, Formatting.Indented) :
+                string.Empty;
+        }
+
+        /// <summary>
         /// Obtiene la lista de cabeceras que se envian con la solicitud.
         /// </summary>
         /// <param name="parameters">Parámeros de la solicitud.</param>
@@ -302,43 +362,7 @@ namespace Processa.Services.Aspen.Client.Fluent
             return parameters.Where(item => item.Type == ParameterType.HttpHeader)
                                     .ToDictionary((p) => p.Name, (p) => p.Value);
         }
-
-        /// <summary>
-        /// Agrega las cabeceras necesarias para el procesamiento de la solicitud.
-        /// </summary>
-        /// <param name="request">Instancia de la solicitud a donde se agregan las cabeceras.</param>
-        /// <param name="customPayload">Valores que se desean agregar al PayLoad de la solicitud o ; <see langword="null" /> para no agregar valores adicionales.</param>
-        public void AddRequiredHeaders(IRestRequest request, IDictionary<string, object> customPayload = null)
-        {
-            this.payload = new Dictionary<string, object>
-            {
-                { this.nonceGenerator.Name, this.nonceGenerator.GetNonce() },
-                { this.epochGenerator.Name, this.epochGenerator.GetSeconds() }
-            };
-
-            if (customPayload != null)
-            {
-                foreach (KeyValuePair<string, object> element in customPayload)
-                {
-                    this.payload.Add(element.Key, element.Value);
-                }
-            }
-
-            if (this.AuthToken != null)
-            {
-                this.payload.Add("Token", this.AuthToken.Token);
-
-                if (this.AuthToken is UserAuthToken context)
-                {
-                    this.payload.Add("DeviceId", context.DeviceId);
-                    this.payload.Add("Username", context.Username);
-                }
-            }
-
-            this.customHeaderManager.AddApiKeyHeader(request, this.identityProvider);
-            this.customHeaderManager.AddPayloadHeader(request, this.encoder, this.payload, this.identityProvider);
-        }
-
+        
         /// <summary>
         /// Envía la solicitud al servicio Aspen.
         /// </summary>
@@ -404,22 +428,10 @@ namespace Processa.Services.Aspen.Client.Fluent
         }
 
         /// <summary>
-        /// Obtiene el cupero que se está enviando con la solicitud (en formato Json).
-        /// </summary>
-        /// <param name="parameters">Parámetros de la solicitud.</param>
-        /// <returns>Cadena en formato JSON con el cuerpo de la solicitud o <see langword="null" /> si no se envian datos en el cuerpo.</returns>
-        private static string GetBody(IEnumerable<Parameter> parameters)
-        {
-            Parameter body = parameters.FirstOrDefault(item => item.Type == ParameterType.RequestBody);
-            return body != null ? 
-                JsonConvert.SerializeObject(body.Value, Formatting.Indented) : 
-                string.Empty;
-        }
-
-        /// <summary>
         /// Envía la solicitud al servicio Aspen de forma asíncrona.
         /// </summary>
-        /// <param name="request">Infromación de la solicitud.</param>    
+        /// <param name="request">Infromación de la solicitud.</param>
+        /// <returns>Isntancia de Task con el resultado de la ejecución de la tarea.</returns>
         private async Task<IRestResponse> ExecuteAsync(IRestRequest request)
         {
             return await this.restClient.ExecuteTaskAsync(request);

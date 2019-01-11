@@ -24,9 +24,9 @@ namespace Processa.Services.Aspen.Client.Fluent.Contracts
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="DefaultSettings"/>
         /// </summary>
-        public DefaultSettings()
+        public DefaultSettings(AppScope appScope = AppScope.Autonomous)
         {
-            this.AppScope = AppScope.Autonomous;
+            this.AppScope = appScope;
             this.NonceGenerator = new GuidNonceGenerator();
             this.EpochGenerator = new UnixEpochGenerator();
             this.JsonSerializer = new JsonNetSerializer();

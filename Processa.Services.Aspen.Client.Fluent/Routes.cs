@@ -145,7 +145,7 @@ namespace Processa.Services.Aspen.Client.Fluent
                 /// <summary>
                 /// Endpoint para obtener las cuentas del usuario actual.
                 /// </summary>
-                public static string Accounts => "/accounts";
+                public static string Accounts => $"{Inquires.Root}/accounts";
 
                 /// <summary>
                 /// Endpoint para obtener los balances de una cuenta.
@@ -166,7 +166,7 @@ namespace Processa.Services.Aspen.Client.Fluent
                 /// <summary>
                 /// Endpoint para obtener las cuentas de un usuario.
                 /// </summary>
-                public static string Accounts => "accounts/{DocType}/{DocNumber}";
+                public static string Accounts => $"{Inquires.Root}/accounts";
 
                 /// <summary>
                 /// Endpoint para obtener los balances de una cuenta.
