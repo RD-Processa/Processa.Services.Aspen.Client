@@ -161,7 +161,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <returns>Instancia de <see cref="IEndPointSettings" /> que permite establecer la configuración de conexión.</returns>
         public static IEndPointSettings Initialize(AppScope appScope = AppScope.Autonomous)
         {
-            var customSettings = new DefaultSettings(appScope);
+            ISettings customSettings = new DefaultSettings(appScope);
             return new AspenClient(customSettings);
         }
 
@@ -362,12 +362,39 @@ namespace Processa.Services.Aspen.Client.Fluent
             return parameters.Where(item => item.Type == ParameterType.HttpHeader)
                                     .ToDictionary((p) => p.Name, (p) => p.Value);
         }
-        
+
+        /// <summary>
+        /// Envía la solicitud al servicio Aspen, retornando la respuesta sin procesarla.
+        /// </summary>
+        /// <param name="request">Información de la solicitud.</param>
+        /// <returns>Cadena con la respuesta en crudo del servicio.</returns>
+        private string ExecuteRaw(IRestRequest request)
+        {
+            this.WriteDebugMessage("Uri", $"{this.restClient.BaseUrl}{request.Resource}");
+            this.WriteDebugMessage("Method", request.Method.ToString());
+            this.WriteDebugMessage("Proxy", $"{(this.restClient.Proxy as WebProxy)?.Address?.ToString() ?? "[NONE]"}");
+            this.WriteDebugMessage("Headers", GetHeaders(request.Parameters));
+            this.WriteDebugMessage("PayloadInfo", this.payload);
+            this.WriteDebugMessage("Body", GetBody(request.Parameters));
+            IRestResponse response = this.restClient.Execute(request);
+            this.WriteDebugMessage("StatusCode", $"{(int)response.StatusCode} ({response.StatusCode.ToString()})");
+            this.WriteDebugMessage("StatusDescription", response.StatusDescription);
+            this.WriteInfoMessage("Content-Type", response.ContentType);
+            this.WriteInfoMessage("RawResponse", response.Content);            
+
+            if (!response.IsSuccessful)
+            {
+                throw new AspenResponseException(response);
+            }
+
+            return response.Content;
+        }
+
         /// <summary>
         /// Envía la solicitud al servicio Aspen.
         /// </summary>
         /// <typeparam name="TResponse">Tipo al que se convierte la respuesta del servicio Aspen.</typeparam>
-        /// <param name="request">Infromación de la solicitud.</param>
+        /// <param name="request">Información de la solicitud.</param>
         /// <param name="preprocess">Código a ejecutar antes de enviar la solicitud.</param>
         /// <returns>Instancia de <c>TResponse</c> con la información de respuesta del servicio Aspen.</returns>
         /// <exception cref="AspenResponseException">Se presentó un error al procesar la solicitud. La excepción contiene los detalles del error.</exception>
@@ -383,7 +410,11 @@ namespace Processa.Services.Aspen.Client.Fluent
                 this.WriteDebugMessage("PayloadInfo", this.payload);
                 this.WriteDebugMessage("Body", GetBody(request.Parameters));
                 IRestResponse response = this.restClient.Execute(request);
-                this.WriteInfoMessage(response.Content, "RawResponse");
+                this.WriteDebugMessage("StatusCode", $"{(int) response.StatusCode} ({response.StatusCode.ToString()})");
+                this.WriteDebugMessage("StatusDescription", response.StatusDescription);
+                this.WriteInfoMessage("Content-Type", response.ContentType);
+                this.WriteInfoMessage("RawResponse", response.Content);
+
 
                 if (!response.IsSuccessful)
                 {
@@ -419,7 +450,10 @@ namespace Processa.Services.Aspen.Client.Fluent
             this.WriteDebugMessage("PayloadInfo", this.payload);
             this.WriteDebugMessage("Body", GetBody(request.Parameters));
             IRestResponse response = this.restClient.Execute(request);
-            this.WriteInfoMessage(response.Content, "RawResponse");
+            this.WriteDebugMessage("StatusCode", $"{(int)response.StatusCode} ({response.StatusCode.ToString()})");
+            this.WriteDebugMessage("StatusDescription", response.StatusDescription);
+            this.WriteInfoMessage("Content-Type", response.ContentType);
+            this.WriteInfoMessage("RawResponse", response.Content);
 
             if (!response.IsSuccessful)
             {
@@ -488,12 +522,12 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Escribe un mensaje de información en la traza de seguimiento.
         /// </summary>
         /// <param name="object">Objeto que se escribe en el mensaje.</param>
-        /// <param name="message">Texto que acompaña al mensaje.</param>
-        private void WriteInfoMessage(object @object, string message)
+        /// <param name="message">Texto que acompaña al mensaje.</param>        
+        private void WriteInfoMessage(string message, object @object = null)
         {
             if (this.minimumLoggingLevel >= LoggingLevel.Info)
             {
-                this.loggingProvider.WriteInfo(@object, message);
+                this.loggingProvider.WriteInfo(message, @object);
             }
         }
     }

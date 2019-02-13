@@ -20,7 +20,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
-        void SetUserPin(string pinNumber, string activationCode);
+        void SetPin(string pinNumber, string activationCode);
 
         /// <summary>
         /// Establece el pin transaccional del usuario actual.
@@ -28,7 +28,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
         /// <returns>Instancia de <see cref="Task"/> con la información de la ejecución.</returns>
-        Task<IRestResponse> SetUserPinAsync(string pinNumber, string activationCode);
+        Task<IRestResponse> SetPinAsync(string pinNumber, string activationCode);
 
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS.
@@ -40,6 +40,5 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <returns>Instancia de <see cref="Task"/> con la información de la ejecución.</returns>
         Task<IRestResponse> RequestActivacionCodeAsync();
-
     }
 }

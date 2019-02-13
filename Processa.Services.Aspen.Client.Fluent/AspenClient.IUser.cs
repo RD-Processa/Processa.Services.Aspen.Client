@@ -26,7 +26,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
-        public void SetUserPin(string pinNumber, string activationCode)
+        public void SetPin(string pinNumber, string activationCode)
         {
             Throw.IfNullOrEmpty(pinNumber, nameof(pinNumber));
             Throw.IfNullOrEmpty(activationCode, nameof(activationCode));
@@ -41,7 +41,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
-        internal void SetUserPinAvoidingValidation(string pinNumber, string activationCode)
+        internal void SetPinAvoidingValidation(string pinNumber, string activationCode)
         {
             IRestRequest request = new AspenRequest(this, Routes.Users.Pin, Method.POST);
             request.AddJsonBody(new {PinNumber = pinNumber, ActivationCode = activationCode});
@@ -55,7 +55,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
         /// <returns>Instancia de <see cref="Task"/> con la información de la ejecución.</returns>
-        public async Task<IRestResponse> SetUserPinAsync(string pinNumber, string activationCode)
+        public async Task<IRestResponse> SetPinAsync(string pinNumber, string activationCode)
         {
             Throw.IfNullOrEmpty(pinNumber, nameof(pinNumber));
             Throw.IfNullOrEmpty(activationCode, nameof(activationCode));
@@ -82,6 +82,17 @@ namespace Processa.Services.Aspen.Client.Fluent
         {
             IRestRequest request = new AspenRequest(this, Routes.Users.ActivationCode, Method.POST);
             return await this.ExecuteAsync(request);
+        }
+
+        /// <summary>
+        /// Requests the single use token.
+        /// </summary>
+        /// <param name="pinNumber">The pin number.</param>
+        public void RequestSingleUseToken(string pinNumber)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Tokens.Root, Method.POST);
+            request.AddJsonBody(new { PinNumber = pinNumber, Metadata = "xxxx"});
+            this.Execute(request);
         }
     }
 }

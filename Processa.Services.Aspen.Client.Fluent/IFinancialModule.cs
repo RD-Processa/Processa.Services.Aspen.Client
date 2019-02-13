@@ -8,7 +8,9 @@
 namespace Processa.Services.Aspen.Client.Fluent
 {
     using System.Collections.Generic;
+    using System.Net;
     using Entities;
+    using RestSharp;
 
     /// <summary>
     /// Define las operaciones soportadas por el servicio Aspen para acceder a entidades de información relacionadas con recursos financieros.
@@ -19,7 +21,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Obtiene la información resumida de las cuentas asociadas con el usuario actual.
         /// </summary>
         /// <returns>Listado con la información de las cuentas del usuario actual.</returns>
-        IList<IAccountInfo> GetAccounts();
+        IEnumerable<IAccountInfo> GetAccounts();
 
         /// <summary>
         /// Obtiene la información resumida de las cuentas asociadas del usuario especificado.
@@ -27,6 +29,111 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="docType">Tipo de documento del usuario.</param>
         /// <param name="docNumber">Número de documento del usuario.</param>
         /// <returns>Listado con la información de las cuentas del usuario especificado.</returns>
-        IList<IAccountInfo> GetAccounts(string docType, string docNumber);
+        IEnumerable<IAccountInfo> GetAccounts(string docType, string docNumber);
+
+        /// <summary>
+        /// Obtiene la información resumida de las cuentas asociadas del usuario especificado a partir de su alias utilizado en el registro.
+        /// </summary>
+        /// <param name="channelId">Identificador del canal por el que se registró el usuario.</param>
+        /// <param name="enrollmentAlias">Alias utilizado en el proceso de registro.</param>
+        /// <returns>Listado con la información de las cuentas del usuario especificado.</returns>
+        IEnumerable<IAccountInfo> GetAccountsByAlias(string channelId, string enrollmentAlias);
+
+        /// <summary>
+        /// Obtiene la información de saldos de las cuentas asociadas con el usuario actual.
+        /// </summary>
+        /// <param name="accountId">Identificador de la cuenta para la que se obtienen los saldos.</param>
+        /// <returns>Listado con la información de saldos de las cuentas del usuario actual.</returns>
+        IEnumerable<IBalanceInfo> GetBalances(string accountId);
+
+        /// <summary>
+        /// Obtiene la información de saldos de las cuentas asociadas con el usuario actual.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario asociado con la cuenta.</param>
+        /// <param name="docNumber">Número de documento del usuario asociado con la cuenta.</param>
+        /// <param name="accountId">Identificador de la cuenta para la que se obtienen los saldos.</param>
+        /// <returns>Listado con la información de saldos de las cuentas del usuario actual.</returns>
+        IEnumerable<IBalanceInfo> GetBalances(string docType, string docNumber, string accountId);
+
+        /// <summary>
+        /// Obtiene la información de saldos de las cuentas asociadas por el alias de registro de un usuario.
+        /// </summary>
+        /// <param name="channelId">Identificador del canal por el que se registró el usuario.</param>
+        /// <param name="enrollmentAlias">Alias utilizado en el proceso de registro.</param>
+        /// <param name="accountId">Identificador de la cuenta para la que se obtienen los saldos.</param>
+        /// <returns>Listado con la información de saldos de las cuentas.</returns>
+        IEnumerable<IBalanceInfo> GetBalancesByAlias(string channelId, string enrollmentAlias, string accountId);
+
+        /// <summary>
+        /// Obtiene la información de movimientos financieros de una cuenta.
+        /// </summary>
+        /// <param name="accountId">Identificador de la cuenta para la que se obtienen los movimientos financieros.</param>
+        /// <param name="accountTypeId">Identificador del tipo de cuenta que se desea filtrar o  <see langword="null" /> para omitir el filtro.</param>
+        /// <returns>Listado con la información de movimientos financieros de la cuenta especificada para el usuario actual.</returns>
+        IEnumerable<IMiniStatementInfo> GetStatements(string accountId, string accountTypeId = null);
+
+        /// <summary>
+        /// Obtiene la información de movimientos financieros de una cuenta.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del propietario de la cuenta.</param>
+        /// <param name="docNumber">Número de documento del propietario de la cuenta.</param>
+        /// <param name="accountId">Identificador de la cuenta para la que se obtienen los movimientos financieros.</param>
+        /// <param name="accountTypeId">Identificador del tipo de cuenta que se desea filtrar o  <see langword="null" /> para omitir el filtro.</param>
+        /// <returns>Listado con la información de movimientos financieros de la cuenta especificada para el usuario.</returns>
+        IEnumerable<IMiniStatementInfo> GetStatements(string docType, string docNumber, string accountId, string accountTypeId = null);
+
+        /// <summary>
+        /// Obtiene la información de movimientos de las cuentas asociadas por el alias de registro de un usuario.
+        /// </summary>
+        /// <param name="channelId">Identificador del canal por el que se registró el usuario.</param>
+        /// <param name="enrollmentAlias">Alias utilizado en el proceso de registro.</param>
+        /// <param name="accountId">Identificador de la cuenta para la que se obtienen los movimientos financieros.</param>
+        /// <param name="accountTypeId">Identificador del tipo de cuenta (bolsillo) que se desea filtrar o  <see langword="null" /> para omitir el filtro.</param>
+        /// <returns>Listado con la información de movimientos financieros de la cuenta especificada para el usuario actual.</returns>
+        IEnumerable<IMiniStatementInfo> GetStatementsByAlias(string channelId, string enrollmentAlias, string accountId, string accountTypeId = null);
+
+        /// <summary>
+        /// Solicita el envío de un token transaccional para un usuario.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="metadata">Metadatos que se desean asociar al token.</param>
+        void RequestSingleUseToken(string docType, string docNumber, string metadata = null);
+
+        /// <summary>
+        /// Genera la información de un token transaccional de un solo uso.
+        /// </summary>
+        /// <param name="pinNumber">Pin transaccional del usuario.</param>
+        /// <param name="metadata">Metadatos que se desean asociar al token.</param>
+        /// <returns>Instancia de <see cref="ITokenResponseInfo" /> con la información del token.</returns>
+        ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null);
+
+        /// <summary>
+        /// Obtiene una imagen (representación en formato base64) de un token transaccional de un solo uso.
+        /// </summary>
+        /// <param name="channelId">Identificador del canal por el que se registró el usuario.</param>
+        /// <param name="enrollmentAlias">Alias utilizado en el proceso de registro.</param>
+        /// <returns>Cadena en formato base 64 que representa la información del token transaccional.</returns>
+        string GetImageToken(string channelId, string enrollmentAlias);
+
+        /// <summary>
+        /// Comprueba la validez de un token transaccional.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario para el que se generó el token transaccional.</param>
+        /// <param name="docNumber">Número de documento del usuario para el que se generó el token transaccional.</param>
+        /// <param name="token">Token transaccional que se desea validar.</param>
+        /// <param name="metadata">Metadatos que se asociaron al token al momento de su generación.</param>
+        void ValidateSingleUseToken(string docType, string docNumber, string token, string metadata = null);
+
+        /// <summary>
+        /// Solicita el procesamiento de una transacción de retiro.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="token">Token transacional asociado con el usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se retiran los fondos.</param>
+        /// <param name="amount">Valor del retiro.</param>
+        /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
+        void Withdrawal(string docType, string docNumber, string token, string accountType, int amount, string metadata = null);
     }
 }

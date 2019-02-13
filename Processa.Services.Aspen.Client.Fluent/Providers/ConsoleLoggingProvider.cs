@@ -8,6 +8,7 @@
 namespace Processa.Services.Aspen.Client.Fluent.Providers
 {
     using System;
+    using System.Text;
     using Newtonsoft.Json;
 
     /// <summary>
@@ -45,24 +46,17 @@ namespace Processa.Services.Aspen.Client.Fluent.Providers
         /// </summary>
         /// <param name="object">Instancia del objeto a escribir.</param>
         /// <param name="message">Texto del mensaje de información.</param>
-        public void WriteInfo(object @object, string message = null)
+        public void WriteInfo(string message, object @object)
         {
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                Console.WriteLine($@"[INFO] {message}");
-            }
-
-            if (@object == null)
-            {
-                return;
-            }
+            StringBuilder sb = new StringBuilder(message).Append(" ");
 
             if (!(@object is string))
             {
-                @object = JsonConvert.SerializeObject(@object, Newtonsoft.Json.Formatting.Indented);
+                @object = JsonConvert.SerializeObject(@object, Formatting.Indented);
             }
 
-            Console.WriteLine(@object);
+            sb.Append(@object.ToString());
+            Console.WriteLine($@"[INFO] {sb}");
         }
     }
 }

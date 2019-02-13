@@ -8,9 +8,11 @@
 namespace Processa.Services.Aspen.Client.Fluent
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
+    using Newtonsoft.Json;
     using RestSharp;
 
     /// <summary>
@@ -20,17 +22,21 @@ namespace Processa.Services.Aspen.Client.Fluent
     public sealed class AspenResponseException : Exception
     {
         /// <summary>
-        /// Para uso interno.
-        /// </summary>
-        private IRestResponse response;
-
-        /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="AspenResponseException"/>
         /// </summary>
         /// <param name="response">Respuesta generada por el servicio Aspen.</param>
-        public AspenResponseException(IRestResponse response) : base(response?.StatusDescription ?? response?.ErrorMessage ?? "General Exception", response.ErrorException)
+        public AspenResponseException(IRestResponse response) : base(response?.StatusDescription ?? response?.ErrorMessage ?? "General Exception", response?.ErrorException)
         {
-            this.response = response;
+            if (response == null)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Content))
+            {
+                this.Content = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Content);
+            }
+
             this.StatusCode = response.StatusCode;
             this.StatusDescription = response.StatusDescription ?? string.Empty;
             this.ResponseStatus = response.ResponseStatus;
@@ -82,7 +88,12 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Obtiene la descripción del estado HTTP devuelto por el servicio Aspen.
         /// </summary>
         public string StatusDescription { get; private set; }
-        
+
+        /// <summary>
+        /// Obtiene la información de los datos incluidos en la respuesta generada por el servicio Aspen.
+        /// </summary>
+        public Dictionary<string, object> Content { get; private set; }
+
         /// <summary>
         /// Obtiene el valor de una cabecera de la respuesta.
         /// </summary>

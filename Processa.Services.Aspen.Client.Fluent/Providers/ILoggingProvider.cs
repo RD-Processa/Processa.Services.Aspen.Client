@@ -25,7 +25,7 @@ namespace Processa.Services.Aspen.Client.Fluent.Providers
         /// </summary>
         /// <param name="object">Instancia del objeto a escribir.</param>
         /// <param name="message">Texto del mensaje de información.</param>
-        void WriteInfo(object @object, string message = null);
+        void WriteInfo(string message, object @object = null);
 
         /// <summary>
         /// Escribe información de un error en una traza de seguimiento.

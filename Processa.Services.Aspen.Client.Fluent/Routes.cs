@@ -7,8 +7,6 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Fluent
 {
-    using System.Net.NetworkInformation;
-
     /// <summary>
     /// Facilita la definición de Endpoints del servicio.
     /// </summary>
@@ -150,12 +148,12 @@ namespace Processa.Services.Aspen.Client.Fluent
                 /// <summary>
                 /// Endpoint para obtener los balances de una cuenta.
                 /// </summary>
-                public static string Balances => "accounts/{AccountId}/balances";
+                public static string Balances => $"{Inquires.Root}/accounts/@[AccountId]/balances";
 
                 /// <summary>
                 /// Endpoint para obtener los movimientos de una cuenta.
                 /// </summary>
-                public static string Statements => "accounts/{AccountId}/{AccountTypeId?}/statements";
+                public static string Statements => $"{Inquires.Root}/accounts/@[AccountId]/@[AccountTypeId]/statements";
             }
 
             /// <summary>
@@ -166,17 +164,32 @@ namespace Processa.Services.Aspen.Client.Fluent
                 /// <summary>
                 /// Endpoint para obtener las cuentas de un usuario.
                 /// </summary>
-                public static string Accounts => $"{Inquires.Root}/accounts";
+                public static string Accounts => $"{Inquires.Root}/accounts/@[DocType]/@[DocNumber]";
+
+                /// <summary>
+                /// Endpoint para obtener las cuentas de un usuario por alias de registro.
+                /// </summary>
+                public static string AccountsByAlias => $"{Inquires.Root}/accounts/channel/@[ChannelId]/alias/@[EnrollmentAlias]";
 
                 /// <summary>
                 /// Endpoint para obtener los balances de una cuenta.
                 /// </summary>
-                public static string Balances => "accounts/{DocType}/{DocNumber}/{AccountId}/balances";
+                public static string Balances => $"{Inquires.Root}/accounts/@[DocType]/@[DocNumber]/@[AccountId]/balances";
+
+                /// <summary>
+                /// Endpoint para obtener los saldos de una cuenta por alias de registro.
+                /// </summary>
+                public static string BalancesByAlias => $"{Inquires.Root}/accounts/channel/@[ChannelId]/alias/@[EnrollmentAlias]/id/@[AccountId]/balances";
 
                 /// <summary>
                 /// Endpoint para obtener los movimientos de una cuenta.
                 /// </summary>
-                public static string Statements => "accounts/{DocType}/{DocNumber}/{AccountId}/{AccountTypeId?}/statements";
+                public static string Statements => $"{Inquires.Root}/accounts/@[DocType]/@[DocNumber]/@[AccountId]/@[AccountTypeId]/statements";
+
+                /// <summary>
+                /// Endpoint para obtener los movimientos de una cuenta por alias de registro.
+                /// </summary>
+                public static string StatementsByAlias => $"{Inquires.Root}/accounts/channel/@[ChannelId]/alias/@[EnrollmentAlias]/id/@[AccountId]/type/@[AccountTypeId]/statements";
             }
         }
 
@@ -203,7 +216,17 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// <summary>
             /// Endpoint para redimir un token transaccional.
             /// </summary>
-            public static string Redeem => "/{Token}";
+            public static string Redeem => $"{Tokens.Root}/@[Token]";
+
+            /// <summary>
+            /// Endpoint para el solicitar el envío de un token transaccional.
+            /// </summary>
+            public static string RequestToken => $"{Tokens.Root}/send";
+
+            /// <summary>
+            /// Endpoint para solicitar la imagen de un token transaccional.
+            /// </summary>
+            public static string ImageToken => $"{Tokens.Root}/channel/@[ChannelId]/alias/@[EnrollmentAlias]";
         }
 
         /// <summary>
@@ -325,6 +348,11 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// Endpoint para la transferencia electrónica de fondos.
             /// </summary>
             public static string Transfer => "/transfers";
+
+            /// <summary>
+            /// /// Endpoint para el procesamiento de un retiro.
+            /// </summary>
+            public static string Withdrawal => $"{Financial.Root}/withdrawal";
         }
 
         /// <summary>

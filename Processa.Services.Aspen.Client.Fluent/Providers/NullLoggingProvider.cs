@@ -28,7 +28,7 @@ namespace Processa.Services.Aspen.Client.Fluent.Providers
         /// </summary>
         /// <param name="object">Instancia del objeto a escribir.</param>
         /// <param name="message">Texto del mensaje de información.</param>
-        public void WriteInfo(object @object, string message = null)
+        public void WriteInfo(string message, object @object = null)
         {
         }
 
