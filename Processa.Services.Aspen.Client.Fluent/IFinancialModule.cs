@@ -116,6 +116,15 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <returns>Cadena en formato base 64 que representa la información del token transaccional.</returns>
         string GetImageToken(string channelId, string enrollmentAlias);
 
+
+        /// <summary>
+        /// Obtiene un archivo en formato pdf (base 64) con el resumen de los estados de cuenta.
+        /// </summary>
+        /// <param name="channelId">Identificador del canal por el que se registró el usuario.</param>
+        /// <param name="enrollmentAlias">Alias utilizado en el proceso de registro.</param>
+        /// <returns>Cadena en formato base 64 que representa la información del resumen con los estados de cuenta.</returns>
+        string GetStatementsFile(string channelId, string enrollmentAlias);
+
         /// <summary>
         /// Comprueba la validez de un token transaccional.
         /// </summary>

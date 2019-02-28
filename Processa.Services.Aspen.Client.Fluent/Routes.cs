@@ -7,6 +7,8 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Fluent
 {
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Facilita la definición de Endpoints del servicio.
     /// </summary>
@@ -227,6 +229,11 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// Endpoint para solicitar la imagen de un token transaccional.
             /// </summary>
             public static string ImageToken => $"{Tokens.Root}/channel/@[ChannelId]/alias/@[EnrollmentAlias]";
+
+            /// <summary>
+            /// Endpoint para solicitar el archivo pdf con el resument de los estados de cuenta.
+            /// </summary>
+            public static string PfdStatements => $"{Inquires.Root}/accounts/channel/@[ChannelId]/alias/@[EnrollmentAlias]/summary";
         }
 
         /// <summary>
@@ -369,6 +376,16 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// Endpoint para validaciones de códigos de activación.
             /// </summary>
             public static string ActivationCode => $@"{Root}/activationcode";
+
+            /// <summary>
+            /// Endpoint para el registro de cuentas para transferencias.
+            /// </summary>
+            public static string LinkTransferAccount => "/transfers/accounts/docType/@[DocType]/docNumber/@[DocNumber]";
+
+            /// <summary>
+            /// Endpoint para desvincular cuentas para transferencias.
+            /// </summary>
+            public static string UnlinkTransferAccount => "/transfers/accounts/docType/@[DocType]/docNumber/@[DocNumber]/Alias/@[Alias]";
         }
     }
 }

@@ -7,18 +7,18 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Tests
 {
+    using Entities;
+    using Fluent;
+    using Newtonsoft.Json;
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Drawing;
     using System.Drawing.Imaging;
     using System.IO;
+    using System.Linq;
     using System.Net;
-    using System.Text;
-    using Entities;
-    using Fluent;
-    using Newtonsoft.Json;
-    using NUnit.Framework;
 
     /// <summary>
     /// Implementa pruebas unitarias de la clase <see cref="AspenClient"/>.
@@ -28,8 +28,8 @@ namespace Processa.Services.Aspen.Client.Tests
         /// <summary>
         /// Se produce una excepción si no se llama a Authenticate y se intenta invocar alguna operación que requiera autenticación.
         /// </summary>
-        [Test, 
-         Category("Autonomous-Scope"), 
+        [Test,
+         Category("Autonomous-Scope"),
          Description("https://github.com/RD-Processa/Processa.Services.Aspen.Client/issues/1"),
          Author("Atorres"),
          MaxTime(MaximumResponseTime)]
@@ -294,9 +294,9 @@ namespace Processa.Services.Aspen.Client.Tests
                 {
                     IEnumerable<IMiniStatementInfo> statements = null;
 
-                    void GetStatements() => statements = client.Financial.GetStatements(userInfo.DocType, userInfo.DocNumber, account.Id, balance.TypeId); ;                    
+                    void GetStatements() => statements = client.Financial.GetStatements(userInfo.DocType, userInfo.DocNumber, account.Id, balance.TypeId); ;
                     Assert.DoesNotThrow(GetStatements);
-                    
+
                     PrintOutput("Account", account);
                     PrintOutput("Balance", balance);
                     PrintOutput("Statements", statements);
@@ -314,7 +314,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .GetClient();
 
             var result = client.Financial.GetAccountsByAlias("51D42557-1D54-4C7A-AB8E-8B70F4BA9635", "CC|000005");
-            PrintOutput("Accounts By Alias", result);           
+            PrintOutput("Accounts By Alias", result);
             Assert.IsFalse(false);
         }
 
@@ -342,7 +342,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            client.Financial.RequestSingleUseToken("CL", "3134707406");
+            client.Financial.RequestSingleUseToken("CC", "79483129");
         }
 
         [Test]
@@ -368,7 +368,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            client.Financial.Withdrawal("CL", "3134707406", "176677", "80", 12547);
+            client.Financial.Withdrawal("CC", "79483129", "413760", "80", 12547);
         }
 
         [Test]
@@ -380,7 +380,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            client.Financial.ValidateSingleUseToken("CC", "79483129", "081948", "MyData");
+            client.Financial.ValidateSingleUseToken("CC", "79483129", "167398", "MyData");
         }
 
         [Test]
@@ -392,8 +392,8 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            string channelId = "51D42557-1D54-4C7A-AB8E-8B70F4BA9635";            
-            string enrollmentAlias = "CC|000005";
+            string channelId = "94ED400D-5D26-4160-A3AA-EC45A2B4AD39";
+            string enrollmentAlias = "561625854";
             string response = client.Financial.GetImageToken(channelId, enrollmentAlias);
             byte[] blob = Convert.FromBase64String(response);
             using (MemoryStream ms = new MemoryStream())
@@ -408,6 +408,277 @@ namespace Processa.Services.Aspen.Client.Tests
                 Process.Start("explorer.exe", args);
             }
             //PrintOutput("Base 64", response);
+        }
+
+        [Test]
+        public void GetStatementsFile()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string channelId = "94ED400D-5D26-4160-A3AA-EC45A2B4AD39";
+            string enrollmentAlias = "561625854";
+            string response = client.Financial.GetStatementsFile(channelId, enrollmentAlias);
+            PrintOutput("Resultado", response);
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountNotAcceptableUrl()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string[] invalidDocTypes = { "xd", "yh", "uj", "xxxx", "nhbg" };
+            void LinkTransferAccount(string doc)
+            {
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo("CC", "79483129", "Atorres");
+                string docNumber = new Random().Next().ToString("000000000000");
+                client.Management.LinkTransferAccount(doc, docNumber, accountRequestInfo);
+            }
+
+            foreach (string docType in invalidDocTypes)
+            {
+                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
+                Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
+                Assert.That(exc.EventId, Is.EqualTo("15867"));
+                StringAssert.IsMatch("DocType en Url no es reconocido", exc.Message);
+            }
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountNotAcceptableBody()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string[] invalidDocTypes = { "xd", "yh", "uj", "xxxx", "nhbg" };
+            void LinkTransferAccount(string docType)
+            {
+                string docNumber = new Random().Next().ToString("000000000000");
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(docType, docNumber, "Atorres");
+                client.Management.LinkTransferAccount("CC", docNumber, accountRequestInfo);
+            }
+
+            foreach (string docType in invalidDocTypes)
+            {
+                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
+                Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
+                Assert.That(exc.EventId, Is.EqualTo("15867"));
+                StringAssert.IsMatch("DocType en Body no es reconocido", exc.Message);
+            }
+        }
+
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountMissingDocType()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string[] invalidDocTypes = { "CC", "NIT", "TI", "CE", "PAS" };
+            void LinkTransferAccount(string docType)
+            {
+                string docNumber = new Random().Next().ToString("000000000000");
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(null, docNumber, "SomeValue");
+                client.Management.LinkTransferAccount("CC", docNumber, accountRequestInfo);
+            }
+
+            foreach (string docType in invalidDocTypes)
+            {
+                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
+                Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
+                Assert.That(exc.EventId, Is.EqualTo("15867"));
+                StringAssert.IsMatch("'DocType' no puede ser nulo ni vacío", exc.Message);
+            }
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountMissingDocNumber()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string[] invalidDocTypes = { "CC", "NIT", "TI", "CE", "PAS" };
+            void LinkTransferAccount(string docType)
+            {
+                string docNumber = new Random().Next().ToString("000000000000");
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(docType, null, "SomeValue");
+                client.Management.LinkTransferAccount("CC", docNumber, accountRequestInfo);
+            }
+
+            foreach (string docType in invalidDocTypes)
+            {
+                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
+                Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
+                Assert.That(exc.EventId, Is.EqualTo("15867"));
+                StringAssert.IsMatch("'DocNumber' no puede ser nulo ni vacío", exc.Message);
+            }
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountMissingAlias()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string[] invalidDocTypes = { "CC", "NIT", "TI", "CE", "PAS" };
+            void LinkTransferAccount(string docType)
+            {
+                string docNumber = new Random().Next().ToString("000000000000");
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(docType, docNumber, string.Empty);
+                client.Management.LinkTransferAccount("CC", docNumber, accountRequestInfo);
+            }
+
+            foreach (string docType in invalidDocTypes)
+            {
+                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
+                Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
+                Assert.That(exc.EventId, Is.EqualTo("15867"));
+                StringAssert.IsMatch("'Alias' no puede ser nulo ni vacío", exc.Message);
+            }
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountInvalidAlias()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string[] invalidDocTypes = { "CC", "NIT", "TI", "CE", "PAS" };
+            void LinkTransferAccount(string docType)
+            {
+                string docNumber = new Random().Next().ToString("000000000000");
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(docType, docNumber, "áéíóú");
+                client.Management.LinkTransferAccount("CC", docNumber, accountRequestInfo);
+            }
+
+            foreach (string docType in invalidDocTypes)
+            {
+                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
+                Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
+                Assert.That(exc.EventId, Is.EqualTo("15867"));
+                StringAssert.IsMatch("Alias incluye caracteres inválidos", exc.Message);
+            }
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferAccountValidationWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+
+            string[] docTypes = { "CC", "NIT", "TI", "CE", "PAS" };
+            string randomDocType = docTypes[new Random().Next(0, docTypes.Length)];
+            string randomDocNumber = new Random().Next().ToString("000000000000");
+            string alias = $"Mi alias {new Random().Next(1, 100):000}";
+
+            const string RecognizedDocType = "CC";
+            const string RecognizedDocNumber = "79483129";
+
+            var registeredAccounts = client.Management.GetTransferAccounts(randomDocType, randomDocNumber);
+
+            if (registeredAccounts != null)
+            {
+                foreach (TransferAccountResponseInfo account in registeredAccounts)
+                {
+                    client.Management.UnlinkTransferAccount(randomDocType, randomDocNumber, account.Alias);
+                }
+            }
+
+            ITransferAccountRequestInfo accountInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, RecognizedDocNumber, alias);
+            
+            // Por primera vez debe funcionar...
+            Assert.DoesNotThrow(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
+
+            // Si se intenta registrar de nuevo no debe funcionar..
+            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
+            StringAssert.IsMatch($"Ya existe una cuenta registrada con el nombre '{alias}'", exc.Message);
+            Assert.That(exc.EventId, Is.EqualTo("15853"));
+
+            // Si se intenta registrar de nuevo con otro nombre no debe funcionar.
+            string newAlias = $"Otro alias {new Random().Next(1, 100):000}";
+            accountInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, RecognizedDocNumber, newAlias);
+            exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
+            StringAssert.IsMatch("La cuenta ya está registrada con otro nombre", exc.Message);
+            Assert.That(exc.EventId, Is.EqualTo("15863"));  
+            
+            // La cuenta debe aparecer en la lista de cuentas registradas
+            var accounts = client.Management.GetTransferAccounts(randomDocType, randomDocNumber);
+            Assert.That(accounts.Count, Is.EqualTo(1));
+
+            // Eliminar el registro de la cuenta
+            client.Management.UnlinkTransferAccount(randomDocType, randomDocNumber, alias);
+            accounts = client.Management.GetTransferAccounts(randomDocType, randomDocNumber);
+            Assert.IsNull(accounts);
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void LinkTransferCardHolderValidationWork()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+
+            string unrecognizedDocNumber = new Random().Next().ToString("000000000000");
+            string alias = $"Mi alias {new Random().Next(1, 100):000}";
+            const string RecognizedDocType = "CC";
+            ITransferAccountRequestInfo unknownAccountRequestInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, unrecognizedDocNumber, alias);
+            string docNumber = new Random().Next().ToString("000000000000");
+            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount("CC", docNumber, unknownAccountRequestInfo));
+            StringAssert.IsMatch("No se encuentra información de la cuenta con los datos suministrados", exc.Message);
+            Assert.That(exc.EventId, Is.EqualTo("15856"));
+        }
+
+        [Test]
+        [Category("TransferAccount")]
+        public void GetTransferAccountsWithNoContent()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            const string RecognizedDocType = "CC";
+            string unrecognizedDocNumber = new Random().Next().ToString("000000000000");
+            var result = client.Management.GetTransferAccounts(RecognizedDocType, unrecognizedDocNumber);        
+            Assert.IsNull(result);
         }
     }
 }

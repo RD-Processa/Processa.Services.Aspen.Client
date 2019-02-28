@@ -5,6 +5,7 @@
 // <author>atorrest</author>
 // <date>2019-01-14 05:51 PM</date>
 // ----------------------------------------------------------------------
+// ReSharper disable ClassNeverInstantiated.Global
 namespace Processa.Services.Aspen.Client.Entities
 {
     /// <summary>

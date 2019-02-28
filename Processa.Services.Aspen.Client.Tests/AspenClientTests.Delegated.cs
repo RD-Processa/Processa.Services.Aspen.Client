@@ -8,6 +8,7 @@
 namespace Processa.Services.Aspen.Client.Tests
 {
     using System;
+    using System.Linq;
     using System.Net;
     using Entities;
     using Fluent;
@@ -356,6 +357,81 @@ namespace Processa.Services.Aspen.Client.Tests
             var response = client.Financial.GetSingleUseToken("141414", "MyData");
             PrintOutput("Token", response);
             Assert.IsTrue(true);
+        }
+
+        [Test]
+        [Category("TransferAccountDelegated")]
+        public void GetTransferAccountsDelegated()
+        {
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                                              .RoutingTo(this.delegatedAppInfoProvider)
+                                              .WithIdentity(this.delegatedAppInfoProvider)
+                                              .Authenticate(userInfo)
+                                              .GetClient();
+
+            var response = client.Management.GetTransferAccounts();
+            PrintOutput("Accounts", response);
+        }
+
+        [Test]
+        [Category("TransferAccountDelegated")]
+        public void UnlinkTransferAccountDelegated()
+        {
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                                              .RoutingTo(this.delegatedAppInfoProvider)
+                                              .WithIdentity(this.delegatedAppInfoProvider)
+                                              .Authenticate(userInfo)
+                                              .GetClient();
+
+            var accounts = client.Management.GetTransferAccounts() ?? Enumerable.Empty<TransferAccountResponseInfo>();
+            foreach (TransferAccountResponseInfo info in accounts)
+            {
+                Assert.DoesNotThrow(() => client.Management.UnlinkTransferAccount(info.Alias));
+            }
+        }
+
+        [Test]
+        [Category("TransferAccountDelegated")]
+        public void LinkTransferAccountDelegatedInvalidPin()
+        {
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                                              .RoutingTo(this.delegatedAppInfoProvider)
+                                              .WithIdentity(this.delegatedAppInfoProvider)
+                                              .Authenticate(userInfo)
+                                              .GetClient();
+
+
+            ITransferAccountRequestInfo account = new TransferAccountRequestRequestInfo("CC", "79483129", "Atorres", "6039590286132628");
+            account.PinNumber = new Random().Next(0, 999999).ToString("000000");
+            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(account));
+            Assert.That(exc.EventId, Is.EqualTo("15862"));
+            StringAssert.IsMatch("Pin invalido", exc.Message);
+        }
+
+        [Test]
+        [Category("TransferAccountDelegated")]
+        public void LinkTransferAccountDelegatedWorks()
+        {
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                                              .RoutingTo(this.delegatedAppInfoProvider)
+                                              .WithIdentity(this.delegatedAppInfoProvider)
+                                              .Authenticate(userInfo)
+                                              .GetClient();
+
+            var accounts = client.Management.GetTransferAccounts();
+            foreach (TransferAccountResponseInfo info in accounts)
+            {
+                client.Management.UnlinkTransferAccount(info.Alias);
+            }
+
+            var alias = $"Alias {new Random().Next(1, 999):000}";
+            ITransferAccountRequestInfo account = new TransferAccountRequestRequestInfo("CC", "79483129", alias, "6039590286132628");
+            account.PinNumber = "141414";
+            Assert.DoesNotThrow(() => client.Management.LinkTransferAccount(account));
         }
     }
 }

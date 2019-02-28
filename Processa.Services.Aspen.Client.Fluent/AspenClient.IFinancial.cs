@@ -12,6 +12,7 @@ namespace Processa.Services.Aspen.Client.Fluent
     using Entities;
     using Internals;
     using RestSharp;
+    using Throw = Entities.Throw;
 
     /// <summary>
     /// Implementa un cliente que permite la conexión con el servicio Aspen.
@@ -239,6 +240,23 @@ namespace Processa.Services.Aspen.Client.Fluent
             Throw.IfNullOrEmpty(channelId, nameof(channelId));
             Throw.IfNullOrEmpty(enrollmentAlias, nameof(enrollmentAlias));
             PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Tokens.ImageToken);
+            formatter.Add("@[ChannelId]", channelId);
+            formatter.Add("@[EnrollmentAlias]", enrollmentAlias);
+            IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.GET);
+            return this.ExecuteRaw(request);
+        }
+
+        /// <summary>
+        /// Obtiene un archivo en formato pdf (base 64) con el resumen de los estados de cuenta.
+        /// </summary>
+        /// <param name="channelId">Identificador del canal por el que se registró el usuario.</param>
+        /// <param name="enrollmentAlias">Alias utilizado en el proceso de registro.</param>
+        /// <returns>Cadena en formato base 64 que representa la información del resumen con los estados de cuenta.</returns>
+        public string GetStatementsFile(string channelId, string enrollmentAlias)
+        {
+            Throw.IfNullOrEmpty(channelId, nameof(channelId));
+            Throw.IfNullOrEmpty(enrollmentAlias, nameof(enrollmentAlias));
+            PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Tokens.PfdStatements);
             formatter.Add("@[ChannelId]", channelId);
             formatter.Add("@[EnrollmentAlias]", enrollmentAlias);
             IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.GET);
