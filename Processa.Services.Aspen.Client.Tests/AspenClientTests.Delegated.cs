@@ -25,7 +25,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// Se permite consultar las cuentas de un usuario desde una aplicación delegada.
         /// </summary>
         /// <remarks>A esta prueba como se conecta a varios sistema, se le permite un poco más de tiempo de ejecución.</remarks>
-        [Test, 
+        [Test,
          Category("Delegated-Scope"),
          Description("https://github.com/RD-Processa/Processa.Services.Aspen.Client/issues/7"),
          Author("Atorres"),
@@ -211,7 +211,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
                                               .Authenticate(userInfo)
-                                              .GetClient();            
+                                              .GetClient();
 
             // When            
             const string InvalidPinNumber = "111111";
@@ -227,7 +227,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// <summary>
         /// Se requiere un valor para PinNumber al establecer pin de usuario.
         /// </summary>
-        [Test, 
+        [Test,
          Category("Delegated-Scope"),
          Description("https://github.com/RD-Processa/Processa.Services.Aspen.Client/issues/6"),
          Author("Atorres"),
@@ -269,7 +269,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .WithIdentity(this.delegatedAppInfoProvider)
                                               .Authenticate(userInfo)
                                               .GetClient();
-  
+
             // When
             // PinNumber que cumple con TODAS las políticas de validaciones.
             const string WellFormedPinNumber = "741269";
@@ -326,8 +326,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     PrintOutput("Statements", statements);
 
                     CollectionAssert.IsNotEmpty(statements);
-                }                
-            }            
+                }
+            }
         }
 
         [Test]
@@ -354,7 +354,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate(userInfo)
                                               .GetClient();
 
-            var response = client.Financial.GetSingleUseToken("141414", "MyData");
+            var response = client.Financial.GetSingleUseToken("141414", "80|54789");
             PrintOutput("Token", response);
             Assert.IsTrue(true);
         }
@@ -432,6 +432,22 @@ namespace Processa.Services.Aspen.Client.Tests
             ITransferAccountRequestInfo account = new TransferAccountRequestRequestInfo("CC", "79483129", alias, "6039590286132628");
             account.PinNumber = "141414";
             Assert.DoesNotThrow(() => client.Management.LinkTransferAccount(account));
+        }
+
+        [Test]
+        public void PushGetMessages() 
+        {
+            {
+                DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+                IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                                                  .RoutingTo(this.delegatedAppInfoProvider)
+                                                  .WithIdentity(this.delegatedAppInfoProvider)
+                                                  .Authenticate(userInfo)
+                                                  .GetClient();
+
+                var response = client.Push.GetMessages();
+                PrintOutput("Push", response);
+            }
         }
     }
 }

@@ -11,12 +11,6 @@ namespace Processa.Services.Aspen.Client.Fluent
     /// <summary>
     /// Define las operaciones necesarias para establecer una conexión con el servicio Aspen y enviar solicitudes de procesamiento de información.
     /// </summary>
-    /// <seealso cref="ISessionManager" />
-    /// <seealso cref="IEndPointSettings" />
-    /// <seealso cref="ILoggingSettings" />
-    /// <seealso cref="IAuthSettings" />
-    /// <seealso cref="ISession" />
-    /// <seealso cref="ISettingsModule" />
     public interface IFluentClient : ISessionManager, ISession
     {
         /// <summary>
@@ -38,5 +32,10 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Obtiene un objeto que permite acceder a las operaciones soportadas por el servicio Aspen para la administración de entidades variadas en aplicaciones autónomas.
         /// </summary>
         IManagementModule Management { get; }
+
+        /// <summary>
+        /// Obtiene un objeto que permite acceder a las operaciones soportadas por el servicio Aspen para mensajeria push.
+        /// </summary>
+        IPushModule Push { get; }
     }
 }
