@@ -68,7 +68,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS.
         /// </summary>
-        public void RequestActivacionCode()
+        public void RequestActivationCode()
         {
             IRestRequest request = new AspenRequest(this, Routes.Users.ActivationCode, Method.POST);
             this.Execute(request);
@@ -78,7 +78,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Solicita el envío de un código de activación a través de un mensaje SMS de forma asíncrona.
         /// </summary>
         /// <returns>Instancia de <see cref="Task"/> con la información de la ejecución.</returns>
-        public async Task<IRestResponse> RequestActivacionCodeAsync()
+        public async Task<IRestResponse> RequestActivationCodeAsync()
         {
             IRestRequest request = new AspenRequest(this, Routes.Users.ActivationCode, Method.POST);
             return await this.ExecuteAsync(request);
@@ -92,6 +92,42 @@ namespace Processa.Services.Aspen.Client.Fluent
         {
             IRestRequest request = new AspenRequest(this, Routes.Tokens.Root, Method.POST);
             request.AddJsonBody(new { PinNumber = pinNumber, Metadata = "xxxx"});
+            this.Execute(request);
+        }
+
+        /// <summary>
+        /// Solicita el envío de un token transaccional por SMS para un usuario autenticado.
+        /// </summary>
+        public void RequestSingleUseToken()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Tokens.RequestToken, Method.POST);
+            this.Execute(request);
+        }
+
+        /// <summary>
+        /// Solicita el envío de un token transaccional por SMS para un usuario autenticado de forma asíncrona.
+        /// </summary>
+        /// <returns>
+        /// Instancia de <see cref="Task" /> con la información de la ejecución.
+        /// </returns>
+        public async Task<IRestResponse> RequestSingleUseTokenAsync()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Tokens.RequestToken, Method.POST);
+            return await this.ExecuteAsync(request);
+        }
+
+        /// <summary>
+        /// Actualiza el pin transaccional del usuario actual a partir del pin o clave actual.
+        /// </summary>
+        /// <param name="currentPin">Número de pin transaccional o clave de cuenta actual.</param>
+        /// <param name="newPin">Nuevo número de pin transaccional.</param>
+        public void UpdatePin(string currentPin, string newPin)
+        {
+            Throw.IfNullOrEmpty(currentPin, nameof(currentPin));
+            Throw.IfNullOrEmpty(newPin, nameof(newPin));
+
+            IRestRequest request = new AspenRequest(this, Routes.Users.Pin, Method.PATCH);
+            request.AddJsonBody(new { CurrentValue = currentPin, NewValue = newPin });
             this.Execute(request);
         }
     }

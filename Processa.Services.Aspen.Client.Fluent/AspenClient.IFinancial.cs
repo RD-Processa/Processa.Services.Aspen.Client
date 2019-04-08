@@ -300,7 +300,34 @@ namespace Processa.Services.Aspen.Client.Fluent
             IRestRequest request = new AspenRequest(this, Routes.Financial.Withdrawal, Method.POST);
             request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Metadata = metadata });
             this.Execute(request);
+        }
 
+        /// <summary>
+        /// Solicita el procesamiento de anular una transacción.
+        /// </summary>
+        /// <param name="TransactionId">Identificador original de la transacción.</param>
+        public void Refund(string TransactionId)
+        {
+            Throw.IfNullOrEmpty(TransactionId, nameof(TransactionId));
+
+            PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Financial.Refund);
+            formatter.Add("@[TransactionId]", TransactionId);
+            IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PATCH);
+            this.Execute(request);
+        }
+
+        /// <summary>
+        /// Solicita el procesamiento de reversión una transacción.
+        /// </summary>
+        /// <param name="TransactionId">Identificador original de la transacción.</param>
+        public void Reversal(string TransactionId)
+        {
+            Throw.IfNullOrEmpty(TransactionId, nameof(TransactionId));
+
+            PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Financial.Reversal);
+            formatter.Add("@[TransactionId]", TransactionId);
+            IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PATCH);
+            this.Execute(request);
         }
     }
 }

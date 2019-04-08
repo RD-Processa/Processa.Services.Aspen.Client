@@ -144,5 +144,17 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="amount">Valor del retiro.</param>
         /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
         void Withdrawal(string docType, string docNumber, string token, string accountType, int amount, string metadata = null);
+
+        /// <summary>
+        /// Solicita el procesamiento de anulación de una transacción.
+        /// </summary>
+        /// <param name="TransactionId">Identificador original de la transacción.</param>
+        void Refund(string TransactionId);
+
+        /// <summary>
+        /// Solicita el procesamiento de reversión una transacción.
+        /// </summary>
+        /// <param name="TransactionId">Identificador original de la transacción.</param>
+        void Reversal(string TransactionId);
     }
 }

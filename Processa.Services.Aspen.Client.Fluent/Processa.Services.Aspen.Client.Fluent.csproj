@@ -17,6 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="AppSettingsAutonomous-dmontalvo.json" />
+    <None Remove="AppSettingsDelegated-dmontalvo.json" />
     <None Remove="StyleCop.Cache" />
   </ItemGroup>
 

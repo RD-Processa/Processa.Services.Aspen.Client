@@ -33,12 +33,30 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS.
         /// </summary>
-        void RequestActivacionCode();
+        void RequestActivationCode();
 
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS de forma asíncrona.
         /// </summary>
         /// <returns>Instancia de <see cref="Task"/> con la información de la ejecución.</returns>
-        Task<IRestResponse> RequestActivacionCodeAsync();
+        Task<IRestResponse> RequestActivationCodeAsync();
+
+        /// <summary>
+        /// Solicita el envío de un token transaccional por SMS para un usuario autenticado.
+        /// </summary>
+        void RequestSingleUseToken();
+
+        /// <summary>
+        /// Solicita el envío de un token transaccional por SMS para un usuario autenticado de forma asíncrona.
+        /// </summary>
+        /// <returns>Instancia de <see cref="Task"/> con la información de la ejecución.</returns>
+        Task<IRestResponse> RequestSingleUseTokenAsync();
+
+        /// <summary>
+        /// Actualiza el pin transaccional del usuario actual a partir del pin o clave actual.
+        /// </summary>
+        /// <param name="currentPin">Número de pin transaccional o clave de cuenta actual.</param>
+        /// <param name="newPin">Nuevo número de pin transaccional.</param>
+        void UpdatePin(string currentPin, string newPin);
     }
 }
