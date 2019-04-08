@@ -8,9 +8,7 @@
 namespace Processa.Services.Aspen.Client.Fluent
 {
     using System.Collections.Generic;
-    using System.Net;
     using Entities;
-    using RestSharp;
 
     /// <summary>
     /// Define las operaciones soportadas por el servicio Aspen para acceder a entidades de información relacionadas con recursos financieros.
@@ -98,15 +96,18 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="docType">Tipo de documento del usuario.</param>
         /// <param name="docNumber">Número de documento del usuario.</param>
         /// <param name="metadata">Metadatos que se desean asociar al token.</param>
-        void RequestSingleUseToken(string docType, string docNumber, string metadata = null);
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        void RequestSingleUseToken(string docType, string docNumber, string metadata = null, TagsInfo tags = null);
 
         /// <summary>
         /// Genera la información de un token transaccional de un solo uso.
         /// </summary>
         /// <param name="pinNumber">Pin transaccional del usuario.</param>
         /// <param name="metadata">Metadatos que se desean asociar al token.</param>
+        /// <param name="amount">Valor del token.</param>
+        /// <param name="accountType">Bolsillo para el que se genera el token.</param>
         /// <returns>Instancia de <see cref="ITokenResponseInfo" /> con la información del token.</returns>
-        ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null);
+        ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null, int? amount = null, string accountType = null);
 
         /// <summary>
         /// Obtiene una imagen (representación en formato base64) de un token transaccional de un solo uso.
@@ -132,7 +133,9 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="docNumber">Número de documento del usuario para el que se generó el token transaccional.</param>
         /// <param name="token">Token transaccional que se desea validar.</param>
         /// <param name="metadata">Metadatos que se asociaron al token al momento de su generación.</param>
-        void ValidateSingleUseToken(string docType, string docNumber, string token, string metadata = null);
+        /// <param name="amount">Valor para el que se generó el token.</param>
+        /// <param name="accountType">Bolsillo para el que se generó el token.</param>
+        void ValidateSingleUseToken(string docType, string docNumber, string token, string metadata = null, int? amount = null, string accountType = null);
 
         /// <summary>
         /// Solicita el procesamiento de una transacción de retiro.
@@ -144,5 +147,16 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="amount">Valor del retiro.</param>
         /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
         void Withdrawal(string docType, string docNumber, string token, string accountType, int amount, string metadata = null);
+
+        /// <summary>
+        /// Solicita el procesamiento de una transacción de pago.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="token">Token transacional asociado con el usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se toman los fondos.</param>
+        /// <param name="amount">Valor del pago.</param>
+        /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
+        void Payment(string docType, string docNumber, string token, string accountType, int amount, string metadata = null);
     }
 }

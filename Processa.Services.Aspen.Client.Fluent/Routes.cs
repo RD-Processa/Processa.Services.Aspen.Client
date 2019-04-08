@@ -107,6 +107,11 @@ namespace Processa.Services.Aspen.Client.Fluent
             public static string DocTypes => $"{Root}/document-types";
 
             /// <summary>
+            /// Endpoint para obtener la lista de permisos.
+            /// </summary>
+            public static string ClaimsSettings => $"{Root}/claims";
+
+            /// <summary>
             /// Endpoint para obtener los tipos de transacción de una aplicación.
             /// </summary>
             public static string TranTypes => "/tran-types";
@@ -360,6 +365,11 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// /// Endpoint para el procesamiento de un retiro.
             /// </summary>
             public static string Withdrawal => $"{Financial.Root}/withdrawal";
+
+            /// <summary>
+            /// /// Endpoint para el procesamiento de un pago.
+            /// </summary>
+            public static string Payment => $"{Financial.Root}/Payment";
         }
 
         /// <summary>

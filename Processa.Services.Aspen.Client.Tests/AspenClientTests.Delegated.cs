@@ -354,7 +354,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate(userInfo)
                                               .GetClient();
 
-            var response = client.Financial.GetSingleUseToken("141414", "80|54789");
+            var response = client.Financial.GetSingleUseToken("141414");
             PrintOutput("Token", response);
             Assert.IsTrue(true);
         }

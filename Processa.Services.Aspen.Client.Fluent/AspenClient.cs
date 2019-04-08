@@ -205,14 +205,14 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Envía una solicitud de autenticación al servicio Aspen.
         /// </summary>
         /// <param name="customPayload">Información adicional para agregar en el Payload de la solicitud.</param>
-        /// <param name="cacheIfAvailable">Cuando es <see langword="true" /> se utiliza el último token de autenticación generado en la sesión.</param>
+        /// <param name="useCache">Cuando es <see langword="true" /> se utiliza el último token de autenticación generado en la sesión.</param>
         /// <returns>Instancia de <see cref="ISession" /> que se puede utilizar para solicitar más recursos de información al servicio Aspen.</returns>
-        public ISession Authenticate(IDictionary<string, object> customPayload = null, bool cacheIfAvailable = true)
+        public ISession Authenticate(IDictionary<string, object> customPayload = null, bool useCache = true)
         {
             IRestRequest request = new AspenRequest(this, Routes.Auth.Signin, Method.POST, false);
             this.AddRequiredHeaders(request, customPayload);
 
-            if (cacheIfAvailable)
+            if (useCache)
             {
                 this.AuthToken = CacheStore.GetCurrentToken();
                 if (this.AuthToken != null)

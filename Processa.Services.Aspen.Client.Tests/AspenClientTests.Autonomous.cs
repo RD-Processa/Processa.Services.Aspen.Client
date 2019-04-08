@@ -7,18 +7,17 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Tests
 {
-    using Entities;
-    using Fluent;
-    using Newtonsoft.Json;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Drawing;
     using System.Drawing.Imaging;
     using System.IO;
-    using System.Linq;
     using System.Net;
+    using Entities;
+    using Fluent;
+    using Newtonsoft.Json;
+    using NUnit.Framework;
 
     /// <summary>
     /// Implementa pruebas unitarias de la clase <see cref="AspenClient"/>.
@@ -66,6 +65,61 @@ namespace Processa.Services.Aspen.Client.Tests
                 "15842",
                 HttpStatusCode.BadRequest,
                 @"Custom header 'X-PRO-Auth-App' is required");
+        }
+
+        [Test]
+        public void XX()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity("29b35be3-3159-4800-807e-cde138439378", "colombia")
+                                              .Authenticate()
+                                              .GetClient();
+        }
+
+        [Test]
+        public void HeadersValidations()
+        {            
+            IFluentClient client = AspenClient.Initialize(new HardCodedSettings(new SingleUseNonceGenerator()))
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            void DummyCall1() => client.Financial.RequestSingleUseToken("CC", "52080323");
+            AspenResponseException are1 = Assert.Throws<AspenResponseException>(DummyCall1);
+            AssertAspenResponseException(
+                are1, 
+                "99003", 
+                HttpStatusCode.BadRequest, 
+                "Nonce already processed");
+
+            client = AspenClient.Initialize(new HardCodedSettings(null, new FutureEpochGenerator()))
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            void DummyCall2() => client.Financial.RequestSingleUseToken("CC", "52080323");
+            AspenResponseException are2 = Assert.Throws<AspenResponseException>(DummyCall2);
+            AssertAspenResponseException(
+                are2, 
+                "15851", 
+                HttpStatusCode.RequestedRangeNotSatisfiable, 
+                "Verifique que el reloj del dispositivo");
+
+            string apiKey = this.autonomousAppInfoProvider.ApiKey;
+            string apiSecret = Guid.NewGuid().ToString("D");
+            client = AspenClient.Initialize()
+                                .RoutingTo(this.autonomousAppInfoProvider)
+                                .WithIdentity(apiKey, apiSecret);
+            
+            AspenResponseException are3 = Assert.Throws<AspenResponseException>(() => client.Authenticate(useCache:false));
+            AssertAspenResponseException(
+                are3, 
+                "20007", 
+                HttpStatusCode.BadRequest, 
+                "Content for custom header 'X-PRO-Auth-Payload' is not valid");
         }
 
         /// <summary>
@@ -234,6 +288,21 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.DoesNotThrow(ValidationWorks);
         }
 
+        [Test]
+        public void GivenAValidActivationCodeWhenInvokeValidateCodeThenItWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            string nickname = "70106857";
+            string code = nickname.Substring(nickname.Length - 6, 6);
+            void ValidationWorks() => client.Management.ValidateActivationCode(code, nickname, channelId: "94ED400D-5D26-4160-A3AA-EC45A2B4AD39");
+            Assert.DoesNotThrow(ValidationWorks);
+        }
+
         /// <summary>
         /// Se permite consultar las cuentas de un usuario desde una aplicación autónoma.
         /// </summary>
@@ -294,7 +363,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 {
                     IEnumerable<IMiniStatementInfo> statements = null;
 
-                    void GetStatements() => statements = client.Financial.GetStatements(userInfo.DocType, userInfo.DocNumber, account.Id, balance.TypeId); ;
+                    void GetStatements() => statements = client.Financial.GetStatements(userInfo.DocType, userInfo.DocNumber, account.Id, balance.TypeId);
                     Assert.DoesNotThrow(GetStatements);
 
                     PrintOutput("Account", account);
@@ -342,7 +411,8 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            client.Financial.RequestSingleUseToken("CC", "79483129");
+            TagsInfo tags = new TagsInfo("XX", "xx", "zz", "xx");
+            client.Financial.RequestSingleUseToken("CC", "52080323");
         }
 
         [Test]
@@ -368,8 +438,21 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            client.Financial.Withdrawal("CC", "79483129", "413760", "80", 12547);
+            client.Financial.Withdrawal("CC", "52080323", "585730", "80", 10000);
         }
+
+        [Test]
+        public void Payment()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            client.Financial.Payment("CC", "52080323", "585730", "80", 10000);
+        }
+
 
         [Test]
         public void ValidateSingleUseToken()
@@ -381,6 +464,20 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .GetClient();
 
             client.Financial.ValidateSingleUseToken("CC", "79483129", "167398", "MyData");
+        }
+
+        [Test]
+        public void GetClaims()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            var response = client.Settings.GetClaims();
+            PrintOutput("Claims", response);
+            Assert.IsNotNull(response);
         }
 
         [Test]

@@ -14,7 +14,6 @@ namespace Processa.Services.Aspen.Client.Fluent.Internals
     /// <summary>
     /// Representa la información de una solicitud HTTP al servicio Aspen.
     /// </summary>
-    /// <seealso cref="RestSharp.RestRequest" />
     internal class AspenRequest : RestRequest
     {
         /// <summary>
@@ -24,7 +23,8 @@ namespace Processa.Services.Aspen.Client.Fluent.Internals
         /// <param name="url">URL del recurso solicitado.</param>
         /// <param name="method">Método o verbo HTTP para invocar el recurso.</param>
         /// <param name="addRequiredHeaders">Cuando es <see langword="true" /> se llama al método AddRequiredHeaders.</param>
-        internal AspenRequest(IRequester requester, string url, Method method, bool addRequiredHeaders = true) : this(requester.AppScope, url, method, requester.DeviceInfo)
+        internal AspenRequest(IRequester requester, string url, Method method, bool addRequiredHeaders = true) : 
+            this(requester.AppScope, url, method, requester.DeviceInfo)
         {
             if (addRequiredHeaders)
             {
@@ -69,9 +69,7 @@ namespace Processa.Services.Aspen.Client.Fluent.Internals
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(appScope), appScope, null);
-            }  
-            
-            
+            }                          
         }
     }
 }
