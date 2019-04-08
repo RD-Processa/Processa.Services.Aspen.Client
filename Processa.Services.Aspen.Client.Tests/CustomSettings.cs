@@ -7,7 +7,6 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Tests
 {
-    using Fluent;
     using Fluent.Contracts;
 
     /// <summary>

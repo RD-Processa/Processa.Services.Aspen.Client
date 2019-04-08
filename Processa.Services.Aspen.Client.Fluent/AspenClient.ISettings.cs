@@ -32,5 +32,23 @@ namespace Processa.Services.Aspen.Client.Fluent
             IRestRequest request = new AspenRequest(this, Routes.Resources.DocTypes, Method.GET);
             return this.Execute<List<DocType>>(request);
         }
+
+        /// <summary>
+        /// Obtiene la lista de claims habilitados en el sistema
+        /// </summary>
+        /// <returns>Lista de claims habilitados.</returns>
+        public IList<ClaimSettings> GetClaims()
+        {
+            RestClient client = new RestClient(this.endpointProvider.Url);
+            RestRequest request = new RestRequest("/utils/claims", Method.GET);
+            IRestResponse<List<ClaimSettings>> response = client.Execute<List<ClaimSettings>>(request);
+
+            if (!response.IsSuccessful)
+            {
+                throw new AspenResponseException(response);
+            }
+
+            return response.Data;
+        }    
     }
 }

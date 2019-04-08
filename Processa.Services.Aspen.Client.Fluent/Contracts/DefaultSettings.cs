@@ -33,7 +33,7 @@ namespace Processa.Services.Aspen.Client.Fluent.Contracts
             this.CustomHeaderManager = new CustomHeaderManager();
             this.DeviceInfo = new DeviceInfo();
             this.Proxy = null;
-            this.Timeout = (int)TimeSpan.FromSeconds(20).TotalMilliseconds;
+            this.Timeout = (int)TimeSpan.FromSeconds(30).TotalMilliseconds;
         }
 
         /// <summary>

@@ -20,8 +20,9 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="code">Código de activación que se desea validar.</param>
         /// <param name="nickname">Identificador del usuario para el que se emitió el código de activación.</param>
-        /// <param name="alias">Identificador que se desea asociar con el usuario o  <see langword="null" /> para utilizar el valor de <paramref name="nickname"/>.</param>
-        void ValidateActivationCode(string code, string nickname, string alias = null);
+        /// <param name="alias">Identificador que se desea asociar con el usuario o  <see langword="null" /> para utilizar el valor de <paramref name="nickname" />.</param>
+        /// <param name="channelId">Identificador del canal para el que se generó el código de activación.</param>
+        void ValidateActivationCode(string code, string nickname, string alias = null, string channelId = null);
 
         /// <summary>
         /// Vincula la información de una cuenta a las cuentas habilitadas para transferencias.

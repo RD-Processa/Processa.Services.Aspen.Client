@@ -20,5 +20,11 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <returns>Lista de tipos de documento soportados.</returns>
         IList<DocType> GetDocTypes();
+
+        /// <summary>
+        /// Obtiene la lista de claims habilitados en el sistema
+        /// </summary>
+        /// <returns>Lista de claims habilitados.</returns>
+        IList<ClaimSettings> GetClaims();
     }
 }

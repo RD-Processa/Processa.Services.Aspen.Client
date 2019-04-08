@@ -110,10 +110,16 @@
     <Compile Include="AspenClientTests.Delegated.cs">
       <DependentUpon>AspenClientTests.cs</DependentUpon>
     </Compile>
+    <Compile Include="AspenClientTests.LifecycleToken.cs">
+      <DependentUpon>AspenClientTests.cs</DependentUpon>
+    </Compile>
     <Compile Include="CustomSettings.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="FutureEpochGenerator.cs" />
+    <Compile Include="HardCodedSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecognizedUserInfo.cs" />
+    <Compile Include="SingleUseNonceGenerator.cs" />
     <Compile Include="UnsteadyHeaderManager.cs" />
   </ItemGroup>
   <ItemGroup>

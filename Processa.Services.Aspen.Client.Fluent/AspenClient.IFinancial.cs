@@ -205,13 +205,14 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="docType">Tipo de documento del usuario.</param>
         /// <param name="docNumber">Número de documento del usuario.</param>
         /// <param name="metadata">Metadatos que se desean asociar al token.</param>
-        public void RequestSingleUseToken(string docType, string docNumber, string metadata = null)
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void RequestSingleUseToken(string docType, string docNumber, string metadata = null, TagsInfo tags = null)
         {
             Throw.IfNullOrEmpty(docType, nameof(docType));
             Throw.IfNullOrEmpty(docNumber, nameof(docNumber));
 
             IRestRequest request = new AspenRequest(this, Routes.Tokens.RequestToken, Method.POST);
-            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Metadata = metadata });
+            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Metadata = metadata, Tags = tags });
             this.Execute(request);
         }
 
@@ -220,12 +221,14 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="pinNumber">Pin transaccional del usuario.</param>
         /// <param name="metadata">Metadatos que se desean asociar al token.</param>
+        /// <param name="amount">Valor del token.</param>
+        /// <param name="accountType">Bolsillo para el que se genera el token.</param>
         /// <returns>Instancia de <see cref="ITokenResponseInfo" /> con la información del token.</returns>
-        public ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null)
+        public ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null, int? amount = null, string accountType = null)
         {
             Throw.IfNullOrEmpty(pinNumber, nameof(pinNumber));
             IRestRequest request = new AspenRequest(this, Routes.Tokens.Root, Method.POST);
-            request.AddJsonBody(new { Metadata = metadata, PinNumber = pinNumber });
+            request.AddJsonBody(new { Metadata = metadata, PinNumber = pinNumber, Amount = amount, AccountType = accountType });
             return this.Execute<TokenResponseInfo>(request);
         }
 
@@ -270,13 +273,15 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="docNumber">Número de documento del usuario para el que se generó el token transaccional.</param>
         /// <param name="token">Token que se desea validar.</param>
         /// <param name="metadata">Metadatos que se asociaron al token al momento de su generación.</param>
-        public void ValidateSingleUseToken(string docType, string docNumber, string token, string metadata = null)
+        /// <param name="amount">Valor para el que se generó el token.</param>
+        /// <param name="accountType">Bolsillo para el que se generó el token.</param>
+        public void ValidateSingleUseToken(string docType, string docNumber, string token, string metadata = null, int? amount = null, string accountType = null)
         {
             Throw.IfNullOrEmpty(token, nameof(token));
             PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Tokens.Redeem);
             formatter.Add("@[Token]", token);
             IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PUT);
-            request.AddJsonBody(new { Metadata = metadata, DocType = docType, DocNumber = docNumber });
+            request.AddJsonBody(new { Metadata = metadata, DocType = docType, DocNumber = docNumber, Amount = amount, AccountType = accountType });
             this.Execute(request);
         }
 
@@ -329,5 +334,28 @@ namespace Processa.Services.Aspen.Client.Fluent
             IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PATCH);
             this.Execute(request);
         }
+
+        /// <summary>
+        /// Solicita el procesamiento de una transacción de pago.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="token">Token transacional asociado con el usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se toman los fondos.</param>
+        /// <param name="amount">Valor del pago.</param>
+        /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
+        public void Payment(string docType, string docNumber, string token, string accountType, int amount, string metadata = null)
+        {
+            Throw.IfNullOrEmpty(docType, nameof(docType));
+            Throw.IfNullOrEmpty(docNumber, nameof(docNumber));
+            Throw.IfNullOrEmpty(token, nameof(token));
+            Throw.IfNullOrEmpty(accountType, nameof(accountType));
+            Throw.IfEmpty(amount, nameof(amount));
+
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Payment, Method.POST);
+            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Metadata = metadata });
+            this.Execute(request);
+        }
     }
 }
+
