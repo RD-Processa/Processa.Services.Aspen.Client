@@ -62,7 +62,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .GetClient();
 
             // When
-            void ServiceUnavailable() => client.CurrentUser.RequestActivacionCode();
+            void ServiceUnavailable() => client.CurrentUser.RequestActivationCode();
             AspenResponseException exception = Assert.Throws<AspenResponseException>(ServiceUnavailable);
 
             // Then
@@ -331,7 +331,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test]
-        public void RequestActivacionCode()
+        public void RequestActivationCode()
         {
             DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
@@ -340,8 +340,21 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate(userInfo)
                                               .GetClient();
 
-            client.CurrentUser.RequestActivacionCode();
+            client.CurrentUser.RequestActivationCode();
             //client.CurrentUser.RequestSingleUseToken("141414");
+        }
+
+        [Test]
+        public void RequestSingleUseTokenDelegated()
+        {
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userInfo)
+                .GetClient();
+
+            client.CurrentUser.RequestSingleUseToken();
         }
 
         [Test]
@@ -448,6 +461,37 @@ namespace Processa.Services.Aspen.Client.Tests
                 var response = client.Push.GetMessages();
                 PrintOutput("Push", response);
             }
+        }
+
+        /// <summary>
+        /// Se produce una excepción si se intenta invocar la operación de reversión sin el identificador de la transacción original.
+        /// </summary>
+        /// <remarks>
+        /// Given: Una solicitud de anulación
+        /// When: Con un identificador de transacción original nulo o vacío
+        /// Then: Se genera una excepción de tipo <see cref="ArgumentNullException"/> o <see cref="ArgumentException"/>
+        /// </remarks>
+        [Test]
+        [Category("CurrentUser-UpdatePin")]
+        public void GivenARecognizedUserIdentityWhenRequestedUpdateTransactionalPinWithCurrentPinThenWorks()
+        {
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userInfo)
+                .GetClient();
+
+            // Actualizar el pin funciona.
+            client.CurrentUser.UpdatePin("141414", "151515");
+
+            // Pin anterior ya no es valido para intentar actualizar.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.UpdatePin("141414", "161616"));
+            AssertAspenResponseException(
+                exception,
+                null,
+                HttpStatusCode.NotFound,
+                "Not Found");
         }
     }
 }
