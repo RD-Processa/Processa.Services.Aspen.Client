@@ -8,6 +8,7 @@
 namespace Processa.Services.Aspen.Client.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net;
     using Entities;
@@ -15,12 +16,443 @@ namespace Processa.Services.Aspen.Client.Tests
     using Fluent.Auth;
     using Newtonsoft.Json;
     using NUnit.Framework;
+    using Processa.Services.Aspen.Client.Fluent.Contracts;
 
     /// <summary>
     /// Implementa pruebas unitarias de la clase <see cref="AspenClient"/>.
     /// </summary>
     public partial class AspenClientTests
     {
+        /// <summary>
+        /// Se emite un token de autenticación para un usuario cuando la credencial corresponde a una válida por el sistema.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación con valores válidos
+        /// Then: Se genera un token de autenticación para el usuario
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenAnUserAuthTokenIsGenerated()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+
+            // Then
+            Assert.That(client.AuthToken, Is.TypeOf<UserAuthToken>());
+        }
+
+        /// <summary>
+        /// Se produce una excepción de autenticación si el usuario no es reconocido en el sistema.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario no reconocida
+        /// When: Cuando se invoca o solicita la autenticación
+        /// Then: Entonces se produce una excepción de autenticación
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenAUnrecognizedUserIdentityWhenInvokeAuthenticateThenAnExceptionIsThrows()
+        {
+            // Given
+            string docType = "PAS";
+            string docNumber = new Random().Next(1000000000, int.MaxValue).ToString();
+            string password = Guid.Empty.ToString();
+            DelegatedUserInfo userInfo = new DelegatedUserInfo(docType, docNumber, password);
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("97412"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("Combinación de usuario y contraseña invalida. Por favor revise los valores ingresados e intente de nuevo"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción de autenticación si la credencial del usuario no es válida.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación con una credencial inválida
+        /// Then: Entonces se produce una excepción de autenticación
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithInvalidCredentialThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            userInfo["Password"] = Guid.Empty.ToString();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("97414"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("Combinación de usuario y contraseña invalida. Por favor revise los valores ingresados e intente de nuevo"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción de autenticación por bloqueo de intentos inválidos.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación con una credencial inválida y se intenta las veces permitidas
+        /// Then: Entonces el usuario será bloqueado y se produce una excepción de autenticación.
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithFailedAttemptsThenUserWillBeLockedOutAndExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            userInfo["Password"] = Guid.Empty.ToString();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+            int maxFailedPasswordAttempt = 10;
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = null;
+            for (int index = 1; index <= maxFailedPasswordAttempt - 1; index++)
+            {
+                exception = Assert.Throws<AspenResponseException>(AuthFails);
+                Assert.That(exception.EventId, Is.EqualTo("97414"));
+                Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+                Assert.That(exception.Message, Is.Not.Null.And.Matches("Combinación de usuario y contraseña invalida. Por favor revise los valores ingresados e intente de nuevo"));
+            }
+
+            // Then
+            exception = Assert.Throws<AspenResponseException>(AuthFails);
+            Assert.That(exception.EventId, Is.EqualTo("97415"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("Usuario ha sido bloqueado por superar el número máximo de intentos de sesión inválidos"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción de autenticación cuando el usario está bloqueado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida pero bloqueada
+        /// When: Cuando se invoca o solicita la autenticación
+        /// Then: Entonces se produce una excepción de autenticación.
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithLockoutThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("97413"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("Usuario está bloqueado por superar el número máximo de intentos de sesión inválidos"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción de autenticación cuando el usuario existe pero no tiene credenciales establecidas.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocido sin credenciales en el perfil
+        /// When: Cuando se invoca o solicita la autenticación
+        /// Then: Entonces se produce una excepción de autenticación.
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithMissingCredentialInProfileThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = new DelegatedUserInfo("CC", "1067888455", "colombia");
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("97416"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("Combinación de usuario y contraseña invalida. Por favor revise los valores ingresados e intente de nuevo"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción cuando el formato del secreto del usuario es valor inesperado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida con el formato del secreto inválido
+        /// When: Cuando se invoca o solicita la autenticación
+        /// Then: Entonces se produce una excepción por error interno de servidor.
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithInvalidFormatSecretThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = new DelegatedUserInfo("CC", "1067888455", "colombia");
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("97417"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("No es posible verificar las credenciales del usuario"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción cuando se envía un nonce nulo o vacío en la carga de trabajo.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación con un nonce nulo o vacío
+        /// Then: Entonces se produce una excepción
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithNullOrEmptyNonceThenAnExceptionIsThrows()
+        {
+            AppScope scope = AppScope.Delegated;
+            IEpochGenerator epochGenerator = new FutureEpochGenerator();
+            List<ISettings> testSettings = new List<ISettings>()
+            {
+                new HardCodedSettings(new NullEmptyNonceGenerator(), epochGenerator, scope),
+                new HardCodedSettings(new NullEmptyNonceGenerator(string.Empty), epochGenerator, scope),
+                new HardCodedSettings(new NullEmptyNonceGenerator("   "), epochGenerator, scope)
+            };
+
+            foreach (ISettings settings in testSettings)
+            {
+                IFluentClient client = AspenClient.Initialize(settings)
+                    .RoutingTo(this.delegatedAppInfoProvider)
+                    .WithIdentity(this.delegatedAppInfoProvider);
+
+                // When
+                DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+                void AuthFails() => client.Authenticate(userInfo);
+                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+                // Then
+                Assert.That(exception.EventId, Is.EqualTo("15852"));
+                Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+                Assert.That(exception.Message, Is.Not.Null.And.Matches("'Nonce' no puede ser nulo ni vacío"));
+            }
+        }
+
+        /// <summary>
+        /// Se produce una excepción cuando se envía un nonce que supera la longitud válida en la carga de trabajo.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación con un nonce que excede la longitud
+        /// Then: Entonces se produce una excepción
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithExceedsLengthNonceThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+
+            AppScope scope = AppScope.Delegated;
+            IEpochGenerator epochGenerator = new FutureEpochGenerator();
+            INonceGenerator nonceGenerator = new SingleUseNonceGenerator($"{Guid.NewGuid()}-{Guid.NewGuid()}");
+            IFluentClient client = AspenClient.Initialize(new HardCodedSettings(nonceGenerator, epochGenerator, scope))
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("15852"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("'Nonce' debe coincidir con el patrón"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción si no se envían las credenciales del usuario.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación con valores faltantes
+        /// Then: Entonces se produce una excepción
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenAUserIdentityWhenInvokeAuthenticateWithMissingValuesThenAnExceptionIsThrows()
+        {
+            // Given
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate();
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("15852"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("'DeviceId' no puede ser nulo ni vacío"));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocType' no puede ser nulo ni vacío"));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocNumber' no puede ser nulo ni vacío"));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("'Password' no puede ser nulo ni vacío"));
+        }
+
+        /// <summary>
+        /// Se produce una excepción si no se envía el valor esperado del tipo de documento en la carga de trabajo.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación sin el valor del tipo de documento
+        /// Then: Entonces se produce una excepción
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenAUserIdentityWhenInvokeAuthenticateWithInvalidDocTypeThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            List<string> docTypes = new List<string>()
+            {
+                null,
+                string.Empty,
+                "   ",
+                "XX",
+                "YYYYYY"
+            };
+
+            foreach (string docType in docTypes)
+            {
+                userInfo["DocType"] = docType;
+                IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                    .RoutingTo(this.delegatedAppInfoProvider)
+                    .WithIdentity(this.delegatedAppInfoProvider);
+
+                // When
+                void AuthFails() => client.Authenticate(userInfo);
+                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+                // Then
+                Assert.That(exception.EventId, Is.EqualTo("15852"));
+                Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+
+                if (string.IsNullOrWhiteSpace(docType))
+                {
+                    Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocType' no puede ser nulo ni vacío"));
+                    continue;
+                }
+
+                Assert.That(exception.Message, Is.Not.Null.And.Matches($"'{docType}' no se reconoce como un tipo de identificación"));
+            }
+        }
+
+        /// <summary>
+        /// Se produce una excepción si no se envía el valor esperado del número de documento en la carga de trabajo.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación sin el valor del número de documento
+        /// Then: Entonces se produce una excepción
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenAUserIdentityWhenInvokeAuthenticateWithInvalidDocNumberThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            List<string> docNumbers = new List<string>()
+            {
+                null,
+                string.Empty,
+                "   ",
+                "XXXXX",
+                $"{int.MaxValue}{int.MaxValue}"
+            };
+
+            foreach (string docNumber in docNumbers)
+            {
+                userInfo["docNumber"] = docNumber;
+                IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                    .RoutingTo(this.delegatedAppInfoProvider)
+                    .WithIdentity(this.delegatedAppInfoProvider);
+
+                // When
+                void AuthFails() => client.Authenticate(userInfo);
+                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+                // Then
+                Assert.That(exception.EventId, Is.EqualTo("15852"));
+                Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+
+                if (string.IsNullOrWhiteSpace(docNumber))
+                {
+                    Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocNumber' no puede ser nulo ni vacío"));
+                    continue;
+                }
+
+                Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocNumber' debe coincidir con el patrón"));
+            }
+        }
+
+        /// <summary>
+        /// Se produce una excepción si no se envía el valor esperado de la contraseña en la carga de trabajo.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Cuando se invoca o solicita la autenticación sin el valor de la contraseña
+        /// Then: Entonces se produce una excepción
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenAUserIdentityWhenInvokeAuthenticateWithNullOrEmptyPasswordThenAnExceptionIsThrows()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            List<string> passwords = new List<string>()
+            {
+                null,
+                string.Empty,
+                "   "
+            };
+
+            foreach (string password in passwords)
+            {
+                userInfo["Password"] = password;
+                IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                    .RoutingTo(this.delegatedAppInfoProvider)
+                    .WithIdentity(this.delegatedAppInfoProvider);
+
+                // When
+                void AuthFails() => client.Authenticate(userInfo);
+                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+                // Then
+                Assert.That(exception.EventId, Is.EqualTo("15852"));
+                Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+                Assert.That(exception.Message, Is.Not.Null.And.Matches("'Password' no puede ser nulo ni vacío"));
+            }
+        }
+
         /// <summary>
         /// Se permite consultar las cuentas de un usuario desde una aplicación delegada.
         /// </summary>
@@ -69,45 +501,6 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.That(exception.EventId, Is.EqualTo("20100"));
             Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.ServiceUnavailable));
             Assert.That(exception.Message, Is.Not.Null.And.Matches("No fue posible enviar su código de activación"));
-        }
-
-        /// <summary>
-        /// Se produce una excepción si no se envían las credenciales del usuario al autenticar una aplicación delegada.
-        /// </summary>
-        [Category("Delegated-Scope"), Test]
-        public void GivenARecognizedDelegatedIdentityWhenInvokeAuthenticateWithMissingValuesThenAnExceptionIsThrows()
-        {
-            // Given
-            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
-                                              .RoutingTo(this.delegatedAppInfoProvider)
-                                              .WithIdentity(this.delegatedAppInfoProvider);
-
-            // When
-            void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
-
-            // Then
-            Assert.That(exception.EventId, Is.EqualTo("15852"));
-            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
-            Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocType' should not be empty"));
-        }
-
-        /// <summary>
-        /// Se emite un token de autenticación de usuarios cuando las credenciales corresponden a unas conocidas.
-        /// </summary>
-        [Category("Delegated-Scope"), Test]
-        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenAnUserAuthTokenIsGenerated()
-        {
-            // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
-            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
-                                              .RoutingTo(this.delegatedAppInfoProvider)
-                                              .WithIdentity(this.delegatedAppInfoProvider);
-            // When 
-            client.Authenticate(userInfo);
-
-            // Then
-            Assert.That(client.AuthToken, Is.TypeOf<UserAuthToken>());
         }
 
         /// <summary>

@@ -32,7 +32,7 @@ namespace Processa.Services.Aspen.Client.Fluent.Auth
             this.Add("DocType", docType);
             this.Add("DocNumber", docNumber);
             this.Add("Password", password);
-            this.Add("DeviceId", deviceId ?? Environment.MachineName);
+            this.Add("DeviceId", deviceId ?? $@"{Environment.UserDomainName}\{Environment.UserName}");
         }
     }
 }

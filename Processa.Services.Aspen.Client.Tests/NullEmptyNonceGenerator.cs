@@ -1,8 +1,8 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="SingleUseNonceGenerator.cs" company="Processa"> 
+// <copyright file="NullEmptyNonceGenerator.cs" company="Processa"> 
 // Copyright (c) 2019 Todos los derechos reservados.
 // </copyright>
-// <author>atorrest</author>
+// <author>dmontalvo</author>
 // <date>2019-03-15 03:43 PM</date>
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Tests
@@ -10,13 +10,13 @@ namespace Processa.Services.Aspen.Client.Tests
     using System;
     using Fluent.Contracts;
 
-    public class SingleUseNonceGenerator : INonceGenerator
+    public class NullEmptyNonceGenerator : INonceGenerator
     {
         private readonly string nonce;
 
-        public SingleUseNonceGenerator(string nonce = null)
+        public NullEmptyNonceGenerator(string nonce = null)
         {
-            this.nonce = nonce ?? Guid.NewGuid().ToString("B");
+            this.nonce = nonce;
         }
 
         /// <summary>
