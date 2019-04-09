@@ -7,7 +7,6 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Tests
 {
-    using System;
     using Fluent.Contracts;
 
     public class NullEmptyNonceGenerator : INonceGenerator
