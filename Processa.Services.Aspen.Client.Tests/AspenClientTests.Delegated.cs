@@ -48,6 +48,33 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         /// <summary>
+        /// Se produce una excepción por permisos si se usa una aplicación autonoma.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario
+        /// When: Cuando se invoca o solicita la autenticación usando una aplicación autónoma
+        /// Then: Entonces se produce una excepción por permisos
+        /// </remarks>
+        [Category("User-Signin"), Test]
+        public void GivenAUserIdentityWhenInvokeAuthenticateWithUsingApiKeyAutonomousThenAnUserAuthTokenIsGenerated()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider);
+
+            // When
+            void AuthFails() => client.Authenticate(userInfo);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+
+            // Then
+            Assert.That(exception.EventId, Is.EqualTo("1000478"));
+            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+            Assert.That(exception.Message, Is.Not.Null.And.Matches("ApiKey no tiene permisos para realizar la operación. Alcance requerido: 'Delegated'"));
+        }
+
+        /// <summary>
         /// Se produce una excepción de autenticación si el usuario no es reconocido en el sistema.
         /// </summary>
         /// <remarks>
