@@ -12,8 +12,9 @@ namespace Processa.Services.Aspen.Client.Tests
 
     public class HardCodedSettings : DefaultSettings
     {
-        public HardCodedSettings(INonceGenerator nonceGenerator = null, IEpochGenerator epochGenerator = null)
+        public HardCodedSettings(INonceGenerator nonceGenerator = null, IEpochGenerator epochGenerator = null, AppScope appScope = AppScope.Autonomous)
         {
+            this.AppScope = appScope;
             if (nonceGenerator != null)
             {
                 this.NonceGenerator = nonceGenerator;

@@ -17,8 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="AppSettingsAutonomous-dmontalvo.json" />
-    <None Remove="AppSettingsDelegated-dmontalvo.json" />
     <None Remove="StyleCop.Cache" />
   </ItemGroup>
 
@@ -62,7 +60,13 @@
     <None Update="AppSettingsAutonomous-Atorrest.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="AppSettingsAutonomous-dmontalvo.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="AppSettingsDelegated-Atorrest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="AppSettingsDelegated-dmontalvo.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
