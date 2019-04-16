@@ -884,6 +884,182 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         /// <summary>
+        /// Se obtiene la lista de opciones de menú para la aplicación con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar las opciones de menú, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetAppMenuWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var menuItems = client.Settings.GetMenu();
+
+            // Then
+            CollectionAssert.IsNotEmpty(menuItems);
+        }
+
+        /// <summary>
+        /// Se obtiene la lista de tipos de identificacíon admitidos para la aplicación con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los tipos de documentos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateGetDocTypesWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var docTypes = client.Settings.GetDocTypes();
+
+            // Then
+            CollectionAssert.IsNotEmpty(docTypes);
+        }
+
+        /// <summary>
+        /// Se obtiene la lista de operadores de telefonía para la aplicación con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los operadores de telefonía, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetTelcosWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var telcos = client.Settings.GetTelcos();
+
+            // Then
+            CollectionAssert.IsNotEmpty(telcos);
+        }
+
+        /// <summary>
+        /// Se obtiene los tipos de transacción para la aplicación con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los tipos de transacción, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetTranTypesWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var tranTypes = client.Settings.GetTranTypes();
+
+            // Then
+            CollectionAssert.IsNotEmpty(tranTypes);
+        }
+
+        /// <summary>
+        /// Se obtiene los tipos de pagos para la aplicación con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los tipos de pagos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetPaymentTypesWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var paymentTypes = client.Settings.GetPaymentTypes();
+
+            // Then
+            CollectionAssert.IsNotEmpty(paymentTypes);
+        }
+
+        /// <summary>
+        /// Se obtiene los valores admitidos para los procesos de recargas de celulares de la aplicación con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los valores admitidos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetTopUpValuesWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var topUpValues = client.Settings.GetTopUpValues();
+
+            // Then
+            CollectionAssert.IsNotEmpty(topUpValues);
+        }
+
+        /// <summary>
+        /// Se obtienen los valores miscelaneos del sistema con un cliente autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad de usuario reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los valores miscelaneos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Delegated-Resources"), Test]
+        public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetMiscellaneousValuesWorks()
+        {
+            // Given
+            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider);
+
+            // When 
+            client.Authenticate(userInfo);
+            var miscValues = client.Settings.GetMiscellaneousValues();
+
+            // Then
+            Assert.NotNull(miscValues);
+            CollectionAssert.IsNotEmpty(miscValues);
+        }
+
+        /// <summary>
         /// Se produce una excepción si se intenta invocar la operación de reversión sin el identificador de la transacción original.
         /// </summary>
         /// <remarks>
