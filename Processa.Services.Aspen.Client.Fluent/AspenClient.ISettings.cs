@@ -34,6 +34,74 @@ namespace Processa.Services.Aspen.Client.Fluent
         }
 
         /// <summary>
+        /// Obtiene la lista de operadores de telefonía móvil soportados por el servicio Aspen.
+        /// </summary>
+        /// <returns>
+        /// Lista de operadores de telefonía soportados.
+        /// </returns>
+        public IList<Telco> GetTelcos()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Resources.Telcos, Method.GET);
+            return this.Execute<List<Telco>>(request);
+        }
+
+        /// <summary>
+        /// Obtiene la lista de los tipos de transacción para una aplicación.
+        /// </summary>
+        /// <returns>Lista de tipos de transacción soportados.</returns>
+        public IList<TranTypeInfo> GetTranTypes()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Resources.TranTypes, Method.GET);
+            return this.Execute<List<TranTypeInfo>>(request);
+        }
+
+        /// <summary>
+        /// Obtiene los tipos de pagos que se pueden realizar a una cuenta.
+        /// </summary>
+        /// <returns>
+        /// Lista de <see cref="PaymentTypeInfo" /> con los tipos de pago para la aplicación solicitante.
+        /// </returns>
+        public IList<PaymentTypeInfo> GetPaymentTypes()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Resources.PaymentTypes, Method.GET);
+            return this.Execute<List<PaymentTypeInfo>>(request);
+        }
+
+        /// <summary>
+        /// Obtiene los tipos de pagos que se pueden realizar a una cuenta.
+        /// </summary>
+        /// <returns>Lista de <see cref="TopUpInfo"/> con los valores admitidos de recarga por operador para la aplicación solicitante.</returns>
+        public IList<TopUpInfo> GetTopUpValues()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Resources.TopUp, Method.GET);
+            return this.Execute<List<TopUpInfo>>(request);
+        }
+
+        /// <summary>
+        /// Obtiene la lista de opciones que representan el menú de una aplicación móvil.
+        /// </summary>
+        /// <returns>
+        /// Lista de opciones de menú.
+        /// </returns>
+        public IList<MenuItem> GetMenu()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Resources.Menu, Method.GET);
+            return this.Execute<List<MenuItem>>(request);
+        }
+
+        /// <summary>
+        /// Obtiene los valores misceláneos soportados por el servicio Aspen.
+        /// </summary>
+        /// <returns>
+        /// Colección de valores admitidos.
+        /// </returns>
+        public IList<KeyValuePair<string, object>> GetMiscellaneousValues()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Resources.Miscellaneous, Method.GET);
+            return this.Execute<IList<KeyValuePair<string, object>>>(request);
+        }
+
+        /// <summary>
         /// Obtiene la lista de claims habilitados en el sistema
         /// </summary>
         /// <returns>Lista de claims habilitados.</returns>

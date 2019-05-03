@@ -196,19 +196,108 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         /// <summary>
-        /// Se obtienen la lista de tipos de identificacíon, si la app se puede autenticar.
+        /// Se obtienen la lista de tipos de identificacíon, si la aplicación se puede autenticar.
         /// </summary>
-        [Category("Autonomous-Scope"), Test]
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los tipos de documentos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Autonomous-Resources"), Test]
         public void GivenARecognizedIdentityWhenInvokeAuthenticateThenGetDocTypesWorks()
         {
             IFluentClient client = AspenClient.Initialize()
-                                              .RoutingTo(this.autonomousAppInfoProvider)
-                                              .WithIdentity(this.autonomousAppInfoProvider)
-                                              .Authenticate()
-                                              .GetClient();
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
 
             var docTypes = client.Settings.GetDocTypes();
             CollectionAssert.IsNotEmpty(docTypes);
+        }
+
+        /// <summary>
+        /// Se obtienen la lista de operadores de telefonía, si la aplicación se puede autenticar.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los operadores de telefonía, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Autonomous-Resources"), Test]
+        public void GivenARecognizedIdentityWhenInvokeAuthenticateThenGetTelcosWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            var telcos = client.Settings.GetTelcos();
+            CollectionAssert.IsNotEmpty(telcos);
+        }
+
+        /// <summary>
+        /// Se obtienen los tipos de transacción, si la aplicación se puede autenticar.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los tipos de transacción, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Autonomous-Resources"), Test]
+        public void GivenARecognizedIdentityWhenInvokeAuthenticateThenGetTranTypesWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            var tranTypes = client.Settings.GetPaymentTypes();
+            CollectionAssert.IsNotEmpty(tranTypes);
+        }
+
+        /// <summary>
+        /// Se obtienen los tipos de pagos que se pueden realizar a una cuenta, si la aplicación se puede autenticar.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los tipos de pagos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Autonomous-Resources"), Test]
+        public void GivenARecognizedIdentityWhenInvokeAuthenticateThenGetPaymentTypesWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            var paymentTypes = client.Settings.GetPaymentTypes();
+            CollectionAssert.IsNotEmpty(paymentTypes);
+        }
+
+        /// <summary>
+        /// Se obtienen los valores admitidos para recarga a celular si la aplicación se puede autenticar.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Luego recibir un token de autenticación válido
+        /// Then: Al consultar los valores admitidos, funciona al recibir una colección de objetos.
+        /// </remarks>
+        [Category("Autonomous-Resources"), Test]
+        public void GivenARecognizedIdentityWhenInvokeAuthenticateThenGetTopUpValuesWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            var topUpValues = client.Settings.GetTopUpValues();
+            CollectionAssert.IsNotEmpty(topUpValues);
         }
 
         /// <summary>
