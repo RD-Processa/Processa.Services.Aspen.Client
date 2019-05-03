@@ -411,8 +411,8 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            TagsInfo tags = new TagsInfo("XX", "xx", "zz", "xx");
-            client.Financial.RequestSingleUseToken("CC", "52080323");
+            TagsInfo tags = new TagsInfo("XX", "xx", "00", "1234");
+            client.Financial.RequestSingleUseToken("CC", "52080323", tags:tags);
         }
 
         [Test]
@@ -787,7 +787,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// </remarks>
         [Test]
         [Category("Refund")]
-        public void GivenInvalidTransactionIdWhenRequestRefundThenAnExceptionIsThrows()
+        public void Refund()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -795,77 +795,50 @@ namespace Processa.Services.Aspen.Client.Tests
                 .Authenticate()
                 .GetClient();
 
-            Assert.Throws<ArgumentNullException>(() => client.Financial.Refund(null));
-            Assert.Throws<ArgumentException>(() => client.Financial.Refund(string.Empty));
+            string randomAuthNumber = TestContext.CurrentContext.Random.GetDigits(6);
+            string randomDocNumber = TestContext.CurrentContext.Random.GetDigits(10);
+            TagsInfo tags = new TagsInfo("xxxx", "xxxx", "00", "1234");
 
-            AspenResponseException badRequestException = Assert.Throws<AspenResponseException>(() => client.Financial.Refund($"{Guid.NewGuid()}-{Guid.NewGuid()}"));
+            AspenResponseException badRequestException = Assert.Throws<AspenResponseException>(() => client.Financial.Refund(randomAuthNumber, "CC", randomDocNumber, "80", 100, tags));
             AssertAspenResponseException(
                 badRequestException,
                 "15852",
                 HttpStatusCode.BadRequest,
-                "'TransactionId' should be match with pattern");
+                "no tiene un formato valido");
 
-            AspenResponseException notFoundException = Assert.Throws<AspenResponseException>(() => client.Financial.Refund("  "));
+            AspenResponseException notFoundException = Assert.Throws<AspenResponseException>(() => client.Financial.Refund(randomAuthNumber, "CC", randomDocNumber, "80", 100));
             AssertAspenResponseException(
                 notFoundException,
-                null,
-                HttpStatusCode.NotFound,
-                "Not Found");
+                "87001",
+                HttpStatusCode.BadGateway,
+                "Operación financierá no autorizada");
         }
 
-        [Test]
-        [Category("Refund")]
-        public void GivenValidTransactionIdWhenRequestRefundThenWorks()
-        {
-            IFluentClient client = AspenClient.Initialize()
-                .RoutingTo(this.autonomousAppInfoProvider)
-                .WithIdentity(this.autonomousAppInfoProvider)
-                .Authenticate()
-                .GetClient();
 
-            string originalTrans = Guid.NewGuid().ToString();
-            client.Financial.Refund(originalTrans);
-        }
-
-        /// <summary>
-        /// Se produce una excepción si se intenta invocar la operación de reversión sin el identificador de la transacción original.
-        /// </summary>
-        /// <remarks>
-        /// Given: Una solicitud de anulación
-        /// When: Con un identificador de transacción original nulo o vacío
-        /// Then: Se genera una excepción de tipo <see cref="ArgumentNullException"/> o <see cref="ArgumentException"/>
-        /// </remarks>
         [Test]
         [Category("Reversal")]
-        public void GivenInvalidTransactionIdWhenRequestReversalThenAnExceptionIsThrows()
+        public void RefundReversal()
         {
             IFluentClient client = AspenClient.Initialize()
-                .RoutingTo(this.autonomousAppInfoProvider)
-                .WithIdentity(this.autonomousAppInfoProvider)
-                .Authenticate()
-                .GetClient();
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
 
-            Assert.Throws<ArgumentNullException>(() => client.Financial.Reversal(null));
-            Assert.Throws<ArgumentException>(() => client.Financial.Reversal(string.Empty));
+            var randomId = Guid.NewGuid().ToString("D");
+            var randomDocNumber = new Random().Next().ToString("0000000000");
 
-            AspenResponseException badRequestException = Assert.Throws<AspenResponseException>(() => client.Financial.Reversal($"{Guid.NewGuid()}-{Guid.NewGuid()}"));
-            AssertAspenResponseException(
-                badRequestException,
-                "15852",
-                HttpStatusCode.BadRequest,
-                "'TransactionId' should be match with pattern");
-
-            AspenResponseException notFoundException = Assert.Throws<AspenResponseException>(() => client.Financial.Reversal("  "));
+            AspenResponseException notFoundException = Assert.Throws<AspenResponseException>(() => client.Financial.RefundReversal(randomId, "CC", randomDocNumber, "80", 100));
             AssertAspenResponseException(
                 notFoundException,
-                null,
-                HttpStatusCode.NotFound,
-                "Not Found");
+                "80002",
+                HttpStatusCode.BadGateway,
+                "No se ha podido obtener respuesta por el sistema responsable de procesarla");
         }
 
         [Test]
         [Category("Reversal")]
-        public void GivenValidTransactionIdWhenRequestReversalThenWorks()
+        public void PaymentReversal()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -873,8 +846,36 @@ namespace Processa.Services.Aspen.Client.Tests
                 .Authenticate()
                 .GetClient();
 
-            string originalTrans = Guid.NewGuid().ToString();
-            client.Financial.Reversal(originalTrans);
+            var randomId = Guid.NewGuid().ToString("D");
+            var randomDocNumber = new Random().Next().ToString("0000000000");
+
+            AspenResponseException notFoundException = Assert.Throws<AspenResponseException>(() => client.Financial.PaymentReversal(randomId, "CC", randomDocNumber, "80", 100));
+            AssertAspenResponseException(
+                notFoundException,
+                "15880",
+                HttpStatusCode.NotFound,
+                "No se encontró el TransactionId");
+        }
+
+        [Test]
+        [Category("Reversal")]
+        public void WithdrawalReversal()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                                              .RoutingTo(this.autonomousAppInfoProvider)
+                                              .WithIdentity(this.autonomousAppInfoProvider)
+                                              .Authenticate()
+                                              .GetClient();
+
+            var randomId = Guid.NewGuid().ToString("D");
+            var randomDocNumber = new Random().Next().ToString("0000000000");
+           
+            AspenResponseException notFoundException = Assert.Throws<AspenResponseException>(() => client.Financial.WithdrawalReversal(randomId, "CC", randomDocNumber, "80", 100));
+            AssertAspenResponseException(
+                notFoundException,
+                "15880",
+                HttpStatusCode.BadGateway,
+                "No se encontró el TransactionId");
         }
     }
 }

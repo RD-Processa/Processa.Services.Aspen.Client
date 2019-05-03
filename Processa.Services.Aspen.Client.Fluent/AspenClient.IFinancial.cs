@@ -7,7 +7,6 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Fluent
 {
-    using System;
     using System.Collections.Generic;
     using Entities;
     using Internals;
@@ -293,8 +292,8 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="token">Token transacional asociado con el usuario.</param>
         /// <param name="accountType">Tipo de cuenta de la que se retiran los fondos.</param>
         /// <param name="amount">Valor del retiro.</param>
-        /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
-        public void Withdrawal(string docType, string docNumber, string token, string accountType, int amount, string metadata = null)
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void Withdrawal(string docType, string docNumber, string token, string accountType, int amount, TagsInfo tags = null)
         {
             Throw.IfNullOrEmpty(docType, nameof(docType));
             Throw.IfNullOrEmpty(docNumber, nameof(docNumber));
@@ -303,35 +302,85 @@ namespace Processa.Services.Aspen.Client.Fluent
             Throw.IfEmpty(amount, nameof(amount));
 
             IRestRequest request = new AspenRequest(this, Routes.Financial.Withdrawal, Method.POST);
-            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Metadata = metadata });
+            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Tags = tags });
             this.Execute(request);
         }
 
         /// <summary>
-        /// Solicita el procesamiento de anular una transacción.
+        /// Solicita el procesamiento de anulación de una transacción.
         /// </summary>
-        /// <param name="TransactionId">Identificador original de la transacción.</param>
-        public void Refund(string TransactionId)
+        /// <param name="authNumber">Número de autorización de la transacción original.</param>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se retiran los fondos.</param>
+        /// <param name="amount">Valor del retiro.</param>
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void Refund(string authNumber, string docType, string docNumber, string accountType, int amount, TagsInfo tags = null)
         {
-            Throw.IfNullOrEmpty(TransactionId, nameof(TransactionId));
+            Throw.IfNullOrEmpty(authNumber, nameof(authNumber));
+            Throw.IfNullOrEmpty(docType, nameof(docType));
+            Throw.IfNullOrEmpty(docNumber, nameof(docNumber));
+            Throw.IfNullOrEmpty(accountType, nameof(accountType));
+            Throw.IfEmpty(amount, nameof(amount));
 
-            PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Financial.Refund);
-            formatter.Add("@[TransactionId]", TransactionId);
-            IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PATCH);
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Refund, Method.POST);
+            request.AddJsonBody(new { AuthNumber = authNumber, DocType = docType, DocNumber = docNumber, AccountType = accountType, Amount = amount, Tags = tags});
             this.Execute(request);
         }
 
         /// <summary>
-        /// Solicita el procesamiento de reversión una transacción.
+        /// Solicita el procesamiento de reversión una transacción de pago.
         /// </summary>
-        /// <param name="TransactionId">Identificador original de la transacción.</param>
-        public void Reversal(string TransactionId)
+        /// <param name="transactionId">Identificador de la transacción original.</param>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se retiran los fondos.</param>
+        /// <param name="amount">Valor del retiro.</param>
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void PaymentReversal(string transactionId, string docType, string docNumber, string accountType, int amount, TagsInfo tags = null)
         {
-            Throw.IfNullOrEmpty(TransactionId, nameof(TransactionId));
+            string url = Routes.Financial.Payment;
+            ReversalInfo reversalInfo = new ReversalInfo(transactionId, docType, docNumber, accountType, amount, tags);
+            this.PerformReversal(url, reversalInfo);
+        }
 
-            PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Financial.Reversal);
-            formatter.Add("@[TransactionId]", TransactionId);
-            IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PATCH);
+        /// <summary>
+        /// Solicita el procesamiento de reversión una transacción de retiro.
+        /// </summary>
+        /// <param name="transactionId">Identificador de la transacción original.</param>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se retiran los fondos.</param>
+        /// <param name="amount">Valor del retiro.</param>
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void WithdrawalReversal(string transactionId, string docType, string docNumber, string accountType, int amount, TagsInfo tags = null)
+        {
+            string url = Routes.Financial.Withdrawal;
+            ReversalInfo reversalInfo = new ReversalInfo(transactionId, docType, docNumber, accountType, amount, tags);
+            this.PerformReversal(url, reversalInfo);
+        }
+
+        /// <summary>
+        /// Solicita la anulación de un reverso.
+        /// </summary>
+        /// <param name="transactionId">Identificador de la transacción original.</param>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se retiran los fondos.</param>
+        /// <param name="amount">Valor del retiro.</param>
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void RefundReversal(string transactionId, string docType, string docNumber, string accountType, int amount, TagsInfo tags = null)
+        {
+            string url = Routes.Financial.Refund;
+            ReversalInfo reversalInfo = new ReversalInfo(transactionId, docType, docNumber, accountType, amount, tags);
+            this.PerformReversal(url, reversalInfo);
+        }
+
+        private void PerformReversal(string url, ReversalInfo reversalInfo)
+        {
+            Throw.IfNullOrEmpty(url, nameof(url));
+            IRestRequest request = new AspenRequest(this, url, Method.PATCH);
+            request.AddJsonBody(reversalInfo);
             this.Execute(request);
         }
 
@@ -343,8 +392,8 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="token">Token transacional asociado con el usuario.</param>
         /// <param name="accountType">Tipo de cuenta de la que se toman los fondos.</param>
         /// <param name="amount">Valor del pago.</param>
-        /// <param name="metadata">Metadatos que fueron asociado al token en la generación.</param>
-        public void Payment(string docType, string docNumber, string token, string accountType, int amount, string metadata = null)
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        public void Payment(string docType, string docNumber, string token, string accountType, int amount, TagsInfo tags = null)
         {
             Throw.IfNullOrEmpty(docType, nameof(docType));
             Throw.IfNullOrEmpty(docNumber, nameof(docNumber));
@@ -353,7 +402,7 @@ namespace Processa.Services.Aspen.Client.Fluent
             Throw.IfEmpty(amount, nameof(amount));
 
             IRestRequest request = new AspenRequest(this, Routes.Financial.Payment, Method.POST);
-            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Metadata = metadata });
+            request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Tags = tags });
             this.Execute(request);
         }
     }
