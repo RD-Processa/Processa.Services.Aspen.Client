@@ -68,13 +68,13 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test]
-        public void XX()
+        public void GetClientWorks()
         {
-            IFluentClient client = AspenClient.Initialize()
-                                              .RoutingTo(this.autonomousAppInfoProvider)
-                                              .WithIdentity("29b35be3-3159-4800-807e-cde138439378", "colombia")
-                                              .Authenticate()
-                                              .GetClient();
+            AspenClient.Initialize()
+                  .RoutingTo(this.autonomousAppInfoProvider)
+                  .WithIdentity("29b35be3-3159-4800-807e-cde138439378", "colombia")
+                  .Authenticate()
+                  .GetClient();
         }
 
         [Test]
@@ -435,7 +435,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test]
-        public void yyy()
+        public void GetStatementsFromAccountINfoWorks()
         {
             RecognizedUserInfo userInfo = RecognizedUserInfo.Current();
             IFluentClient client = AspenClient.Initialize()
@@ -844,8 +844,8 @@ namespace Processa.Services.Aspen.Client.Tests
             string alias = $"Mi alias {new Random().Next(1, 100):000}";
             const string RecognizedDocType = "CC";
             ITransferAccountRequestInfo unknownAccountRequestInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, unrecognizedDocNumber, alias);
-            string docNumber = new Random().Next().ToString("000000000000");
-            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount("CC", docNumber, unknownAccountRequestInfo));
+            string randomDocNumber = new Random().Next().ToString("000000000000");
+            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount("CC", randomDocNumber, unknownAccountRequestInfo));
             StringAssert.IsMatch("No se encuentra información de la cuenta con los datos suministrados", exc.Message);
             Assert.That(exc.EventId, Is.EqualTo("15856"));
         }

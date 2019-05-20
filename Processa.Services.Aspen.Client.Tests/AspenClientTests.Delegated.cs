@@ -35,13 +35,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenAnUserAuthTokenIsGenerated()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
 
             // Then
             Assert.That(client.AuthToken, Is.TypeOf<UserAuthToken>());
@@ -59,13 +59,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenAUserIdentityWhenInvokeAuthenticateWithUsingApiKeyAutonomousThenAnUserAuthTokenIsGenerated()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.autonomousAppInfoProvider)
                 .WithIdentity(this.autonomousAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(userCredentials);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -86,16 +86,16 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenAUnrecognizedUserIdentityWhenInvokeAuthenticateThenAnExceptionIsThrows()
         {
             // Given
-            string docType = "PAS";
-            string docNumber = new Random().Next(1000000000, int.MaxValue).ToString();
+            string fixedDocType = "PAS";
+            string randomDocNumber = new Random().Next(1000000000, int.MaxValue).ToString();
             string password = Guid.Empty.ToString();
-            DelegatedUserInfo userInfo = new DelegatedUserInfo(docType, docNumber, password);
+            DelegatedUserInfo delegatedUserInfo = new DelegatedUserInfo(fixedDocType, randomDocNumber, password);
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(delegatedUserInfo);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -116,14 +116,14 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithInvalidCredentialThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
-            userInfo["Password"] = Guid.Empty.ToString();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            userCredentials["Password"] = Guid.Empty.ToString();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(userCredentials);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -144,15 +144,15 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithFailedAttemptsThenUserWillBeLockedOutAndExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
-            userInfo["Password"] = Guid.Empty.ToString();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            userCredentials["Password"] = Guid.Empty.ToString();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
             int maxFailedPasswordAttempt = 10;
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(userCredentials);
             AspenResponseException exception = null;
             for (int index = 1; index <= maxFailedPasswordAttempt - 1; index++)
             {
@@ -181,13 +181,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithLockoutThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(userCredentials);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -208,13 +208,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithMissingCredentialInProfileThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = new DelegatedUserInfo("CC", "1067888455", "colombia");
+            DelegatedUserInfo delegatedUserInfo = new DelegatedUserInfo("CC", "1067888455", "colombia");
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(delegatedUserInfo);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -235,13 +235,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithInvalidFormatSecretThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = new DelegatedUserInfo("CC", "1067888455", "colombia");
+            DelegatedUserInfo delegatedUserInfo = new DelegatedUserInfo("CC", "1067888455", "colombia");
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(delegatedUserInfo);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -261,13 +261,13 @@ namespace Processa.Services.Aspen.Client.Tests
         [Category("User-Signin"), Test]
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithNullOrEmptyNonceThenAnExceptionIsThrows()
         {
-            AppScope scope = AppScope.Delegated;
+            const AppScope Scope = AppScope.Delegated;
             IEpochGenerator epochGenerator = new FutureEpochGenerator();
             List<ISettings> testSettings = new List<ISettings>()
             {
-                new HardCodedSettings(new NullEmptyNonceGenerator(), epochGenerator, scope),
-                new HardCodedSettings(new NullEmptyNonceGenerator(string.Empty), epochGenerator, scope),
-                new HardCodedSettings(new NullEmptyNonceGenerator("   "), epochGenerator, scope)
+                new HardCodedSettings(new NullEmptyNonceGenerator(), epochGenerator, Scope),
+                new HardCodedSettings(new NullEmptyNonceGenerator(string.Empty), epochGenerator, Scope),
+                new HardCodedSettings(new NullEmptyNonceGenerator("   "), epochGenerator, Scope)
             };
 
             foreach (ISettings settings in testSettings)
@@ -277,8 +277,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     .WithIdentity(this.delegatedAppInfoProvider);
 
                 // When
-                DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
-                void AuthFails() => client.Authenticate(userInfo);
+                DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+                void AuthFails() => client.Authenticate(userCredentials);
                 AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
                 // Then
@@ -300,7 +300,7 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateWithExceedsLengthNonceThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
 
             AppScope scope = AppScope.Delegated;
             IEpochGenerator epochGenerator = new FutureEpochGenerator();
@@ -310,7 +310,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            void AuthFails() => client.Authenticate(userInfo);
+            void AuthFails() => client.Authenticate(userCredentials);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
             // Then
@@ -360,7 +360,7 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenAUserIdentityWhenInvokeAuthenticateWithInvalidDocTypeThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             List<string> docTypes = new List<string>()
             {
                 null,
@@ -370,28 +370,28 @@ namespace Processa.Services.Aspen.Client.Tests
                 "YYYYYY"
             };
 
-            foreach (string docType in docTypes)
+            foreach (string dt in docTypes)
             {
-                userInfo["DocType"] = docType;
+                userCredentials["DocType"] = dt;
                 IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                     .RoutingTo(this.delegatedAppInfoProvider)
                     .WithIdentity(this.delegatedAppInfoProvider);
 
                 // When
-                void AuthFails() => client.Authenticate(userInfo);
+                void AuthFails() => client.Authenticate(userCredentials);
                 AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
                 // Then
                 Assert.That(exception.EventId, Is.EqualTo("15852"));
                 Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
 
-                if (string.IsNullOrWhiteSpace(docType))
+                if (string.IsNullOrWhiteSpace(dt))
                 {
                     Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocType' no puede ser nulo ni vacío"));
                     continue;
                 }
 
-                Assert.That(exception.Message, Is.Not.Null.And.Matches($"'{docType}' no se reconoce como un tipo de identificación"));
+                Assert.That(exception.Message, Is.Not.Null.And.Matches($"'{dt}' no se reconoce como un tipo de identificación"));
             }
         }
 
@@ -407,7 +407,7 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenAUserIdentityWhenInvokeAuthenticateWithInvalidDocNumberThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             List<string> docNumbers = new List<string>()
             {
                 null,
@@ -417,22 +417,22 @@ namespace Processa.Services.Aspen.Client.Tests
                 $"{int.MaxValue}{int.MaxValue}"
             };
 
-            foreach (string docNumber in docNumbers)
+            foreach (string value in docNumbers)
             {
-                userInfo["docNumber"] = docNumber;
+                userCredentials["docNumber"] = value;
                 IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                     .RoutingTo(this.delegatedAppInfoProvider)
                     .WithIdentity(this.delegatedAppInfoProvider);
 
                 // When
-                void AuthFails() => client.Authenticate(userInfo);
+                void AuthFails() => client.Authenticate(userCredentials);
                 AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
                 // Then
                 Assert.That(exception.EventId, Is.EqualTo("15852"));
                 Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
 
-                if (string.IsNullOrWhiteSpace(docNumber))
+                if (string.IsNullOrWhiteSpace(value))
                 {
                     Assert.That(exception.Message, Is.Not.Null.And.Matches("'DocNumber' no puede ser nulo ni vacío"));
                     continue;
@@ -454,7 +454,7 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenAUserIdentityWhenInvokeAuthenticateWithNullOrEmptyPasswordThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             List<string> passwords = new List<string>()
             {
                 null,
@@ -464,13 +464,13 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string password in passwords)
             {
-                userInfo["Password"] = password;
+                userCredentials["Password"] = password;
                 IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                     .RoutingTo(this.delegatedAppInfoProvider)
                     .WithIdentity(this.delegatedAppInfoProvider);
 
                 // When
-                void AuthFails() => client.Authenticate(userInfo);
+                void AuthFails() => client.Authenticate(userCredentials);
                 AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
 
                 // Then
@@ -492,11 +492,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue7Delegated()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             // When
@@ -513,11 +513,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenANonWorkingServiceWhenInvokeRequestActivationCodeThenAnExceptionIsThrows()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             // When
@@ -541,11 +541,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue2()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
             // When
             string randomPinNumber = TestContext.CurrentContext.Random.GetDigits(6);
@@ -569,11 +569,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue3()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
             // When
             string tooLongPinNumber = TestContext.CurrentContext.Random.GetDigits(7);
@@ -597,11 +597,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue4()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             // When
@@ -626,11 +626,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue5()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             // When            
@@ -655,13 +655,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue6()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider);
 
             // When
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             string randomCode = TestContext.CurrentContext.Random.GetDigits(6);
             void BadRequest() => ((AspenClient)client.CurrentUser).SetPinAvoidingValidation(null, randomCode);
             AspenResponseException exception = Assert.Throws<AspenResponseException>(BadRequest);
@@ -683,11 +683,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void Issue8()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             // When
@@ -711,11 +711,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Test]
         public void GetBalancesDelegated()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             var balances = client.Financial.GetBalances("203945");
@@ -724,13 +724,13 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test]
-        public void xxx()
+        public void GetStatementsWorksForDelegatedApps()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo delegatedUser = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(delegatedUser)
                                               .GetClient();
 
             var accounts = client.Financial.GetAccounts();
@@ -753,11 +753,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Test]
         public void RequestActivationCode()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             client.CurrentUser.RequestActivationCode();
@@ -767,11 +767,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Test]
         public void RequestSingleUseTokenDelegated()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider)
-                .Authenticate(userInfo)
+                .Authenticate(userCredentials)
                 .GetClient();
 
             client.CurrentUser.RequestSingleUseToken();
@@ -780,11 +780,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Test]
         public void GetSingleUseToken()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             var response = client.Financial.GetSingleUseToken("141414");
@@ -796,11 +796,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Category("TransferAccountDelegated")]
         public void GetTransferAccountsDelegated()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             var response = client.Management.GetTransferAccounts();
@@ -811,11 +811,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Category("TransferAccountDelegated")]
         public void UnlinkTransferAccountDelegated()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             var accounts = client.Management.GetTransferAccounts() ?? Enumerable.Empty<TransferAccountResponseInfo>();
@@ -829,11 +829,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Category("TransferAccountDelegated")]
         public void LinkTransferAccountDelegatedInvalidPin()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
 
@@ -848,11 +848,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Category("TransferAccountDelegated")]
         public void LinkTransferAccountDelegatedWorks()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                               .RoutingTo(this.delegatedAppInfoProvider)
                                               .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userInfo)
+                                              .Authenticate(userCredentials)
                                               .GetClient();
 
             var accounts = client.Management.GetTransferAccounts();
@@ -871,11 +871,11 @@ namespace Processa.Services.Aspen.Client.Tests
         public void PushGetMessages() 
         {
             {
-                DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+                DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
                 IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                                                   .RoutingTo(this.delegatedAppInfoProvider)
                                                   .WithIdentity(this.delegatedAppInfoProvider)
-                                                  .Authenticate(userInfo)
+                                                  .Authenticate(userCredentials)
                                                   .GetClient();
 
                 var response = client.Push.GetMessages();
@@ -895,13 +895,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetAppMenuWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var menuItems = client.Settings.GetMenu();
 
             // Then
@@ -920,13 +920,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateGetDocTypesWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var docTypes = client.Settings.GetDocTypes();
 
             // Then
@@ -945,13 +945,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetTelcosWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var telcos = client.Settings.GetTelcos();
 
             // Then
@@ -970,13 +970,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetTranTypesWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var tranTypes = client.Settings.GetTranTypes();
 
             // Then
@@ -995,13 +995,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetPaymentTypesWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var paymentTypes = client.Settings.GetPaymentTypes();
 
             // Then
@@ -1020,13 +1020,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetTopUpValuesWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var topUpValues = client.Settings.GetTopUpValues();
 
             // Then
@@ -1045,13 +1045,13 @@ namespace Processa.Services.Aspen.Client.Tests
         public void GivenARecognizedUserIdentityWhenInvokeAuthenticateThenGetMiscellaneousValuesWorks()
         {
             // Given
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider);
 
             // When 
-            client.Authenticate(userInfo);
+            client.Authenticate(userCredentials);
             var miscValues = client.Settings.GetMiscellaneousValues();
 
             // Then
@@ -1071,11 +1071,11 @@ namespace Processa.Services.Aspen.Client.Tests
         [Category("CurrentUser-UpdatePin")]
         public void GivenARecognizedUserIdentityWhenRequestedUpdateTransactionalPinWithCurrentPinThenWorks()
         {
-            DelegatedUserInfo userInfo = GetDelegatedUserCredentials();
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
                 .RoutingTo(this.delegatedAppInfoProvider)
                 .WithIdentity(this.delegatedAppInfoProvider)
-                .Authenticate(userInfo)
+                .Authenticate(userCredentials)
                 .GetClient();
 
             // Actualizar el pin funciona.
