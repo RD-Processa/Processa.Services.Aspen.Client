@@ -58,7 +58,7 @@ namespace Processa.Services.Aspen.Client.Tests
             AspenResponseException exception, 
             string expectedEventId, 
             HttpStatusCode expectedStatusCode, 
-            string expectedMessagePattern)
+            string expectedMessagePattern = null)
         {
             Assert.That(exception.StatusCode, Is.EqualTo(expectedStatusCode));
             StringAssert.AreEqualIgnoringCase(expectedEventId ?? exception.EventId, exception.EventId);

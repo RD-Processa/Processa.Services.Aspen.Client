@@ -530,8 +530,505 @@ namespace Processa.Services.Aspen.Client.Tests
             client.Financial.Withdrawal("CC", "52080323", "585730", "80", 10000);
         }
 
-        [Test]
-        public void Payment()
+        /// <summary>
+        /// Se intenta realizar la operación de pago con token pero falla por el formato del tipo de documento.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Cuando intenta realizar un pago con token transaccional usando un tipo de documento no reconocido
+        /// Then: Entonces genera una excecpión por formato de datos
+        /// </remarks>
+        [Test, Category("Autonomous-Payment-BadRequest"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithNotRecognizedDocTypeThenAnExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            void InvokePaymentAvoidingValidation(string invalidDocType) => ((AspenClient)client.Financial).PaymentAvoidingValidation(invalidDocType, "52080323", "585730", "80", 10000);
+            void InvokePayment(string invalidDocType) => client.Financial.Payment(invalidDocType, "52080323", "585730", "80", 10000);
+
+            // Tipo de documento nulo...
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocType' no puede ser nulo ni vacío");
+
+            // Tipo de documento vacío...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocType' no puede ser nulo ni vacío");
+
+            // Tipo de documento espacios en blanco...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation("    "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocType' no puede ser nulo ni vacío");
+
+            // Tipo de documento no reconocido...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'XX' no se reconoce como un tipo de identificación");
+
+
+            // Tipo de documento no reconocido...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("C"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'C' no se reconoce como un tipo de identificación");
+
+            // Tipo de documento no reconocido...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("ZZZZZZ"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'ZZZZZZ' no se reconoce como un tipo de identificación");
+        }
+
+        /// <summary>
+        /// Se intenta realizar la operación de pago con token pero falla por el formato del número del documento.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Cuando intenta realizar un pago con token transaccional usando un tipo de documento no reconocido
+        /// Then: Entonces genera una excecpión por formato de datos
+        /// </remarks>
+        [Test, Category("Autonomous-Payment-BadRequest"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithInvalidDocNumberThenAnExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            void InvokePaymentAvoidingValidation(string invalidDocNumber) => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", invalidDocNumber, "585730", "80", 10000);
+            void InvokePayment(string invalidDocNumber) => client.Financial.Payment("CC", invalidDocNumber, "585730", "80", 10000);
+
+            // Número de documento nulo...
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' no puede ser nulo ni vacío");
+
+            // Número de documento vacío...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' no puede ser nulo ni vacío");
+
+            // Número de documento espacios en blanco...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation("    "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' no puede ser nulo ni vacío");
+
+            // Número de documento solo letras...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
+
+            // Número de documento letras y números...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("X1X2X3X4X5"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
+
+            // Número de documento números y espacios...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(" 123 456 "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
+
+            // Número de documento excede longitud...
+            string randomDocNumber = new Random().Next().ToString("00000000000000000000");
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomDocNumber));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
+        }
+
+        /// <summary>
+        /// Se intenta realizar la operación de pago con token pero falla por el formato del tipo de cuenta.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Cuando intenta realizar un pago con token transaccional usando un tipo de documento no reconocido
+        /// Then: Entonces genera una excecpión por formato de datos
+        /// </remarks>
+        [Test, Category("Autonomous-Payment-BadRequest"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithInvalidAccountTypeThenAnExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            void InvokePayment(string invalidAccountType) => client.Financial.Payment("CC", "52080323", "000000", invalidAccountType, 10000);
+
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("8000"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            // No requiere el tipo de cuenta y por defecto se usará el tipo de cuenta configurada.
+            void InvokePaymentWithoutAccountType() => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", null, 10000, null, excludeAccountType: true, excludeTags: true);
+            exception = Assert.Throws<AspenResponseException>(InvokePaymentWithoutAccountType);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
+        }
+
+        /// <summary>
+        /// Se intenta realizar la operación de pago con token pero falla por el formato del número del token.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Cuando intenta realizar un pago con token transaccional usando un tipo de documento no reconocido
+        /// Then: Entonces genera una excecpión por formato de datos
+        /// </remarks>
+        [Test, Category("Autonomous-Payment-BadRequest"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithInvalidTokenThenAnExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            void InvokePaymentAvoidingValidation(string invalidToken) => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", invalidToken, "80", 10000);
+            void InvokePayment(string invalidToken) => client.Financial.Payment("CC", "52080323", invalidToken, "80", 10000);
+
+            // Token nulo...
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' no puede ser nulo ni vacío");
+
+            // Token vacío...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' no puede ser nulo ni vacío");
+
+            // Token espacios en blanco...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation("    "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' no puede ser nulo ni vacío");
+
+            // Token solo letras...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXXX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' debe coincidir con el patrón ^\d{1,9}$");
+
+            // Token letras y números...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("X1X2X3X4X5"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' debe coincidir con el patrón ^\d{1,9}$");
+
+            // Token números y espacios...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(" 123 456 "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' debe coincidir con el patrón ^\d{1,9}$");
+
+            // Token excede longitud...
+            string randomToken = new Random().Next().ToString("0000000000");
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomToken));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Token' debe coincidir con el patrón ^\d{1,9}$");
+        }
+
+        /// <summary>
+        /// Se intenta realizar la operación de pago con token pero falla por el formato del número del token.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Cuando intenta realizar un pago con token transaccional usando un tipo de documento no reconocido
+        /// Then: Entonces genera una excecpión por formato de datos
+        /// </remarks>
+        [Test, Category("Autonomous-Payment-BadRequest"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithAmountLessThanOrEqualZeroThenAnExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            void InvokePaymentAvoidingValidation(int invalidAmount) => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", "80", invalidAmount);
+
+            // Valor menor a cero...
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(-1));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            // Valor menor a cero...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(0));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            // Sin valor para la transacción...
+            void InvokePaymentWithoutAmount() => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", "80", null, null, excludeAmount: true);
+            exception = Assert.Throws<AspenResponseException>(InvokePaymentWithoutAmount);
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            void InvokePaymentNotIntAmount(string invalidAmount) => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", "80", invalidAmount);
+
+            // Cuando el valor es un entero de tipo cadena...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("0"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            // Cuando el valor es nulo, eso equivalente a cero (ya que es el valor predeterminado de un entero)...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount(null));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            // Cuando no es un valor entero falla la serialización...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"Valor inesperado al analizar los datos de solicitud en formato JSON");
+
+            // Cuando no es un valor entero falla la serialización...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"Valor inesperado al analizar los datos de solicitud en formato JSON");
+
+            // Cuando no es un valor entero falla la serialización...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("XXX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"Valor inesperado al analizar los datos de solicitud en formato JSON");
+
+            // Cuando el valor es un entero de tipo cadena debe ser exitosa la validación del campo...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("10000"));
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
+
+            // Cuando el valor es un entero pero no existe token...
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "000000", "80", 10000);
+            exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
+        }
+
+        /// <summary>
+        /// Se intenta realizar la operación de pago con token pero falla por el formato del tipo de cuenta.
+        /// </summary>
+        /// <remarks>
+        /// Given: Dada una identidad autnónoma reconocida
+        /// When: Cuando intenta realizar un pago con token transaccional usando un tipo de documento no reconocido
+        /// Then: Entonces genera una excecpión por formato de datos
+        /// </remarks>
+        [Test, Category("Autonomous-Payment-BadRequest"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithInvalidTagsThenAnExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            void InvokePayment(TagsInfo tagsInfo) => client.Financial.Payment("CC", "52080323", "000000", "80", 10000, tagsInfo);
+
+            string terminalId = "X".PadRight(9, 'X');
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(terminalId: terminalId)));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
+
+            string cardAcceptorId = "X".PadRight(16, 'X');
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(cardAcceptorId: cardAcceptorId)));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(customerGroup: "XX")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(customerGroup: "ZZZZ")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(customerGroup: "800")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "XX")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "ZZZZZZZZ")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "000")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "00000")));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
+
+            // Cuando la propiedad Tags en el body es nula...
+            void InvokePaymentWithoutTags() => client.Financial.Payment("CC", "52080323", "000000", "80", 10000);
+            exception = Assert.Throws<AspenResponseException>(InvokePaymentWithoutTags);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
+
+            // Cuando no se incluye la propiedad Tags en el body...
+            void InvokePaymentExcludeTagsFromBody() => ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", "80", 10000, null, excludeTags: true);
+            exception = Assert.Throws<AspenResponseException>(InvokePaymentExcludeTagsFromBody);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithGeneratedTokenThenFinancialRequestWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            // TODO: Genere un token manualmente por $10.000
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "771513", "80", 10000);
+
+            // La intención es que el supere la validación del token, no importa si la transacción no es autorizada.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "87000",
+                HttpStatusCode.NotAcceptable,
+                null);
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithInvalidTokenThenAnNotFoundTokenExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                                               .RoutingTo(this.autonomousAppInfoProvider)
@@ -539,9 +1036,181 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .Authenticate()
                                               .GetClient();
 
-            client.Financial.Payment("CC", "52080323", "585730", "80", 10000);
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "000000", "80", 10000);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
         }
 
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithAmountExceedAmountTokenThenAnNotFoundTokenExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'TokenProvider:ValidateAmount'
+             */
+            // TODO: Genere un token manualmente por $10.000
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "294590", "80", int.MaxValue);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. El valor de la transacción excede el valor del token. Tran ($2,147,483,647) vs. Token ($10,000)");
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithAmountMismatchedAmountTokenThenAnNotFoundTokenExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'TokenProvider:ValidateAmountExactly'
+             */
+            // TODO: Genere un token manualmente por $10.000
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "706166", "80", 9999);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. El valor de la transacción no coincide con el valor del token. Tran ($9,999) vs. Token ($10,000)");
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithAccountTypeMismatchedAccountTypeTokenThenAnNotFoundTokenExceptionIsThrows()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'TokenProvider:ValidateAccountType'
+             */
+            // TODO: Genere un token manualmente por $10.000 y bolsillo 80
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "427431", "81", 10000);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. Tipo de cuenta de la transacción no coincide con el tipo de cuenta del token. Tran (81) vs Token (80)");
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithNotRequiredValidateAmountTokenThenFinancialRequestWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'TokenProvider:ValidateAmount' -Value 'false'
+             */
+            // TODO: Genere un token manualmente por $10.000 y bolsillo 80
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "130239", "80", 120000);
+
+            // La intención es que el supere la validación del token, no importa si la transacción no es autorizada.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "87000",
+                HttpStatusCode.NotAcceptable,
+                null);
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithNotRequiredValidateAmountEqualToAmountTokenThenFinancialRequestWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'TokenProvider:ValidateAmountExactly' -Value 'false'
+             */
+            // TODO: Genere un token manualmente por $10.000 y bolsillo 80
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "518294", "80", 9000);
+
+            // La intención es que el supere la validación del token, no importa si la transacción no es autorizada.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "87000",
+                HttpStatusCode.NotAcceptable,
+                null);
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithNotRequiredValidateAmountEqualToAmountTokenButAmoutNotCantExceedAmountTokenThenFinancialRequestWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'TokenProvider:ValidateAmountExactly' -Value 'false'
+             */
+            // TODO: Genere un token manualmente por $10.000 y bolsillo 80
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "903100", "80", int.MaxValue);
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. El valor de la transacción excede el valor del token. Tran ($2,147,483,647) vs. Token ($10,000)");
+        }
+
+        [Test, Category("Autonomous-Payment"), Description(""), Author("dmontalvo")]
+        public void GivenARecognizedIdentityWhenInvokePaymentWithNotRequiredValidatedAccountTypeTokenThenFinancialRequestWorks()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            /*
+             * TODO: Debe cambiar la configuración del ApiKey para ignorar la validación obligatoria del tipo de cuenta.
+             * Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'TokenProvider:ValidateAccountType' -Value 'false'
+             */
+            // TODO: Genere un token manualmente por $10.000 y bolsillo 80
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "811444", "81", 10000);
+
+            // La intención es que el supere la validación del token, no importa si la transacción no es autorizada.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AssertAspenResponseException(
+                exception,
+                "87000",
+                HttpStatusCode.NotAcceptable,
+                null);
+        }
 
         [Test]
         public void ValidateSingleUseToken()
@@ -902,7 +1571,6 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadGateway,
                 "Operación financierá no autorizada");
         }
-
 
         [Test]
         [Category("Reversal")]
