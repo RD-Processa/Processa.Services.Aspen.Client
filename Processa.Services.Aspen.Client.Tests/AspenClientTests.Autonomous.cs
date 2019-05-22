@@ -13,6 +13,7 @@ namespace Processa.Services.Aspen.Client.Tests
     using System.Drawing;
     using System.Drawing.Imaging;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using Entities;
     using Fluent;
@@ -1303,7 +1304,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
-                StringAssert.IsMatch("DocType en Url no es reconocido", exc.Message);
+                StringAssert.IsMatch("Tipo de documento en la URL no es reconocido", exc.Message);
             }
         }
 
@@ -1330,7 +1331,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
-                StringAssert.IsMatch("DocType en Body no es reconocido", exc.Message);
+                StringAssert.IsMatch("Tipo de documento en el BODY no es reconocido", exc.Message);
             }
         }
 
@@ -1438,7 +1439,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(docType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
-                StringAssert.IsMatch("Alias incluye caracteres inválidos", exc.Message);
+                StringAssert.IsMatch("'Alias' incluye caracteres inválidos", exc.Message);
             }
         }
 
@@ -1485,12 +1486,17 @@ namespace Processa.Services.Aspen.Client.Tests
             string newAlias = $"Otro alias {new Random().Next(1, 100):000}";
             accountInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, RecognizedDocNumber, newAlias);
             exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
-            StringAssert.IsMatch("La cuenta ya está registrada con otro nombre", exc.Message);
+            StringAssert.IsMatch("Cuenta ya está registrada con otro alias", exc.Message);
             Assert.That(exc.EventId, Is.EqualTo("15863"));  
             
             // La cuenta debe aparecer en la lista de cuentas registradas
             var accounts = client.Management.GetTransferAccounts(randomDocType, randomDocNumber);
             Assert.That(accounts.Count, Is.EqualTo(1));
+
+            // La información del titular debe aparecer en el registro de la cuenta.
+            TransferAccountResponseInfo accountRequestRequestInfo = accounts.First();
+            Assert.AreEqual(accountRequestRequestInfo.CardHolderDocType, accountInfo.DocType);
+            Assert.AreEqual(accountRequestRequestInfo.CardHolderDocNumber, accountInfo.DocNumber);
 
             // Eliminar el registro de la cuenta
             client.Management.UnlinkTransferAccount(randomDocType, randomDocNumber, alias);
