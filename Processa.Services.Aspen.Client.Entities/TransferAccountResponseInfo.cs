@@ -26,5 +26,15 @@ namespace Processa.Services.Aspen.Client.Entities
         /// Obtiene el numéro (enmascarado) de la cuenta inscrita.
         /// </summary>
         public string MaskedPan { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el tipo de identificación del titular de la cuenta.
+        /// </summary>
+        public string CardHolderDocType { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el número de identificación del titular de la cuenta.
+        /// </summary>
+        public string CardHolderDocNumber { get; set; }
     }
 }

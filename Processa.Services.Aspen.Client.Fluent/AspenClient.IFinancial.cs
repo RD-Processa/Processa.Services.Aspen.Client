@@ -8,6 +8,7 @@
 namespace Processa.Services.Aspen.Client.Fluent
 {
     using System.Collections.Generic;
+    using System.Dynamic;
     using Entities;
     using Internals;
     using RestSharp;
@@ -405,6 +406,54 @@ namespace Processa.Services.Aspen.Client.Fluent
             request.AddJsonBody(new { DocType = docType, DocNumber = docNumber, Token = token, AccountType = accountType, Amount = amount, Tags = tags });
             this.Execute(request);
         }
+
+
+        /// <summary>
+        /// Solicita el procesamiento de una transacción de pago sin validar localmente. Se expone como internal con el fin de validar el comportamiento del servicio Aspen.
+        /// </summary>
+        /// <param name="docType">Tipo de documento del usuario.</param>
+        /// <param name="docNumber">Número de documento del usuario.</param>
+        /// <param name="token">Token transacional asociado con el usuario.</param>
+        /// <param name="accountType">Tipo de cuenta de la que se toman los fondos.</param>
+        /// <param name="amount">Valor del pago.</param>
+        /// <param name="tags">Tags relacionados con la solicitud.</param>
+        /// <param name="excludeAmount"></param>
+        /// <param name="excludeAccountType"></param>
+        /// <param name="excludeTags"></param>
+        internal void PaymentAvoidingValidation(
+            string docType,
+            string docNumber,
+            string token,
+            string accountType,
+            object amount,
+            TagsInfo tags = null,
+            bool excludeAmount = false,
+            bool excludeAccountType = false,
+            bool excludeTags = false)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Payment, Method.POST);
+            dynamic body = new ExpandoObject();
+            body.DocType = docType;
+            body.DocNumber = docNumber;
+            body.Token = token;
+
+            if (!excludeAmount)
+            {
+                body.Amount = amount;
+            }
+
+            if (!excludeAccountType)
+            {
+                body.AccountType = accountType;
+            }
+
+            if (!excludeTags)
+            {
+                body.Tags = tags;
+            }
+
+            request.AddJsonBody(body);
+            this.Execute(request);
+        }
     }
 }
-
