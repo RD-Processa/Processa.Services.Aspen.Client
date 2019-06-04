@@ -695,6 +695,32 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"No fue posible enviar el mensaje. Por favor vuelva a intentar en unos minutos");
         }
 
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButResponseFromKrakenSystemWasUnsuccessfulThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración de KRAKEN para usar una cola que no existe y así imitar un timeout.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Kraken:SendMessageRoutingKey' -Value 'Kraken.NotificationRoutingKey.NotFound'
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20102",
+                HttpStatusCode.BadGateway,
+                @"No fue posible enviar el mensaje. Por favor compruebe la información adicional en el contenido de esta respuesta o vuelva a intentar en unos minutos");
+
+            // La respuesta debe incluir en el body propiedades: NotificationResponseCode y NotificationResponseMessage
+            Assert.NotNull(exception.Content);
+            Assert.IsNotEmpty(exception.Content);
+            Assert.Contains("notificationResponseCode", exception.Content.Keys);
+            Assert.Contains("notificationResponseMessage", exception.Content.Keys);
+        }
+
         #endregion
 
         /// <summary>
