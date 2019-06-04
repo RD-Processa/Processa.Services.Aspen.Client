@@ -491,6 +491,20 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.IsFalse(false);
         }
 
+        [Test]
+        public void GetStatementsByAlias()
+        {
+            IFluentClient client = AspenClient.Initialize()
+                .RoutingTo(this.autonomousAppInfoProvider)
+                .WithIdentity(this.autonomousAppInfoProvider)
+                .Authenticate()
+                .GetClient();
+
+            var result = client.Financial.GetStatementsByAlias("51D42557-1D54-4C7A-AB8E-8B70F4BA9635", "CC|000005", "203945");
+            PrintOutput("Statements By Alias", result);
+            Assert.IsTrue(true);
+        }
+
         #region SendToken
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
@@ -769,7 +783,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // Con las propiedades metadata y tags nulas en el body.
             Assert.DoesNotThrow(() => client.Financial.RequestSingleUseToken("CC", "52080323"));
 
-            // Con las propiedades metadata vacía en el body.
+            // Con metadata vacía en el body.
             Assert.DoesNotThrow(() => client.Financial.RequestSingleUseToken("CC", "52080323", "    "));
 
             // Con metadata.
@@ -833,20 +847,6 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         #endregion
-
-        [Test]
-        public void GetStatementsByAlias()
-        {
-            IFluentClient client = AspenClient.Initialize()
-                                              .RoutingTo(this.autonomousAppInfoProvider)
-                                              .WithIdentity(this.autonomousAppInfoProvider)
-                                              .Authenticate()
-                                              .GetClient();
-
-            var result = client.Financial.GetStatementsByAlias("51D42557-1D54-4C7A-AB8E-8B70F4BA9635", "CC|000005", "203945");
-            PrintOutput("Statements By Alias", result);
-            Assert.IsTrue(true);
-        }
 
         #region Payment
 

@@ -23,6 +23,8 @@ namespace Processa.Services.Aspen.Client.Tests
     /// </summary>
     public partial class AspenClientTests
     {
+        #region Signin
+
         /// <summary>
         /// Se emite un token de autenticación para un usuario cuando la credencial corresponde a una válida por el sistema.
         /// </summary>
@@ -480,6 +482,8 @@ namespace Processa.Services.Aspen.Client.Tests
             }
         }
 
+        #endregion
+
         /// <summary>
         /// Se permite consultar las cuentas de un usuario desde una aplicación delegada.
         /// </summary>
@@ -506,29 +510,192 @@ namespace Processa.Services.Aspen.Client.Tests
             CollectionAssert.IsNotEmpty(accounts);
         }
 
-        /// <summary>
-        /// Se produce una excepción si el servicio Aspen no está configurado para el envío de mensajes SMS.
-        /// </summary>
-        [Category("Delegated-Scope"), Test]
-        public void GivenANonWorkingServiceWhenInvokeRequestActivationCodeThenAnExceptionIsThrows()
+        #region RequestActivationCode
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeThenWorks()
         {
-            // Given
             DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
-                                              .RoutingTo(this.delegatedAppInfoProvider)
-                                              .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userCredentials)
-                                              .GetClient();
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
 
-            // When
-            void ServiceUnavailable() => client.CurrentUser.RequestActivationCode();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(ServiceUnavailable);
-
-            // Then
-            Assert.That(exception.EventId, Is.EqualTo("20100"));
-            Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.ServiceUnavailable));
-            Assert.That(exception.Message, Is.Not.Null.And.Matches("No fue posible enviar su código de activación"));
+            Assert.DoesNotThrow(() => client.CurrentUser.RequestActivationCode());
         }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButMessageTemplateIsMissingThenWorkUsingDefaultTemplate()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para la plantilla del mensaje.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'GuessWho:ActivationCodeMessageTemplate'
+            Assert.DoesNotThrow(() => client.CurrentUser.RequestActivationCode());
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButMessageTemplateIsNullOrEmptyThenWorkUsingDefaultTemplate()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para la plantilla del mensaje.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:ActivationCodeMessageTemplate' -Value $null
+            Assert.DoesNotThrow(() => client.CurrentUser.RequestActivationCode());
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButNotConfiguredToSendMessageThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para establecer en falso el envío de códigos de activación.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:SendActivationCode' -Value 'false'
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20099",
+                HttpStatusCode.NotImplemented,
+                @"No se ha establecido la configuración para el envío de mensajes de código de activación");
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButCampaignGuidIsMissingThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para remover el identificador de la campaña.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'GuessWho:CampaignGuid'
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20099",
+                HttpStatusCode.NotImplemented,
+                @"No se ha establecido la configuración para el envío de mensajes de código de activación");
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButCampaignGuidIsNullOrEmptyThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para establecer en nula o vacía, la propiedad del identificador de la campaña.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:CampaignGuid' -Value $null
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20099",
+                HttpStatusCode.NotImplemented,
+                @"No se ha establecido la configuración para el envío de mensajes de código de activación");
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButChannelGuidIsMissingThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para remover el identificador del canal.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'GuessWho:ChannelGuid'
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20099",
+                HttpStatusCode.NotImplemented,
+                @"No se ha establecido la configuración para el envío de mensajes de código de activación");
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButChannelGuidIsNullOrEmptyThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para establecer en nula o vacía, la propiedad del identificador de la campaña.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:ChannelGuid' -Value $null
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20099",
+                HttpStatusCode.NotImplemented,
+                @"No se ha establecido la configuración para el envío de mensajes de código de activación");
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButMessageTemplateIsWhiteSpacesThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración para la plantilla del mensaje.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:ActivationCodeMessageTemplate' -Value '   '
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20099",
+                HttpStatusCode.NotImplemented,
+                @"No se ha establecido la configuración para el envío de mensajes de código de activación");
+        }
+
+        [Test, Category("Delegated-Send-Activation-Code"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenRequestActivationCodeButKrakenSystemNotWorkingThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // NOTA: Debe cambiar la configuración de KRAKEN para usar una cola que no existe y así imitar un timeout.
+            // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Kraken:SendMessageRoutingKey' -Value 'Kraken.NotificationRoutingKey.NotFound'
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AssertAspenResponseException(
+                exception,
+                "20100",
+                HttpStatusCode.ServiceUnavailable,
+                @"No fue posible enviar el mensaje. Por favor vuelva a intentar en unos minutos");
+        }
+
+        #endregion
 
         /// <summary>
         /// Se requiere un valor para ActivationCode al establecer pin de usuario.
@@ -751,20 +918,6 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test]
-        public void RequestActivationCode()
-        {
-            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
-            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
-                                              .RoutingTo(this.delegatedAppInfoProvider)
-                                              .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userCredentials)
-                                              .GetClient();
-
-            client.CurrentUser.RequestActivationCode();
-            //client.CurrentUser.RequestSingleUseToken("141414");
-        }
-
-        [Test]
         public void RequestSingleUseTokenDelegated()
         {
             DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
@@ -882,6 +1035,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 PrintOutput("Push", response);
             }
         }
+
+        #region Resources
 
         /// <summary>
         /// Se obtiene la lista de opciones de menú para la aplicación con un cliente autenticado.
@@ -1058,6 +1213,8 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.NotNull(miscValues);
             CollectionAssert.IsNotEmpty(miscValues);
         }
+
+        #endregion
 
         /// <summary>
         /// Se produce una excepción si se intenta invocar la operación de reversión sin el identificador de la transacción original.
