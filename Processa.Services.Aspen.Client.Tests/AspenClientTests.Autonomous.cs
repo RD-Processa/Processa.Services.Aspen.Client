@@ -826,7 +826,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButTimeoutOnSystemKrakenThenAnExceptionIsThrows()
+        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButSystemKrakenNotWorkingThenAnExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
