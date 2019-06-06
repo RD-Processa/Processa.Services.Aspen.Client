@@ -364,7 +364,7 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// <summary>
             /// Endpoint para el procesamiento de una anulación.
             /// </summary>
-            public static string Refund => $"{Financial.Root}/refund/";
+            public static string Refund => $"{Financial.Root}/refund";
             
             /// <summary>
             /// Endpoint para el procesamiento de un retiro.

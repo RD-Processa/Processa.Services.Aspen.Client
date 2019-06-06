@@ -404,6 +404,32 @@ namespace Processa.Services.Aspen.Client.Fluent
             this.Execute(request);
         }
 
+        internal void RefundAvoidingValidation(
+            string authNumber,
+            string docType,
+            string docNumber,
+            string accountType,
+            object amount,
+            TagsInfo tags = null,
+            bool excludeTags = false)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Refund, Method.POST);
+            dynamic body = new ExpandoObject();
+            body.AuthNumber = authNumber;
+            body.DocType = docType;
+            body.DocNumber = docNumber;
+            body.AccountType = accountType;
+            body.Amount = amount;
+
+            if (!excludeTags)
+            {
+                body.Tags = tags;
+            }
+
+            request.AddJsonBody(body);
+            this.Execute(request);
+        }
+
         /// <summary>
         /// Solicita el procesamiento de reversión una transacción de pago.
         /// </summary>
@@ -418,6 +444,32 @@ namespace Processa.Services.Aspen.Client.Fluent
             string url = Routes.Financial.Payment;
             ReversalInfo reversalInfo = new ReversalInfo(transactionId, docType, docNumber, accountType, amount, tags);
             this.PerformReversal(url, reversalInfo);
+        }
+
+        internal void PaymentReversalAvoidingValidation(
+            string transactionId,
+            string docType,
+            string docNumber,
+            string accountType,
+            object amount,
+            TagsInfo tags = null,
+            bool excludeTags = false)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Payment, Method.PATCH);
+            dynamic body = new ExpandoObject();
+            body.TransactionId = transactionId;
+            body.DocType = docType;
+            body.DocNumber = docNumber;
+            body.AccountType = accountType;
+            body.Amount = amount;
+
+            if (!excludeTags)
+            {
+                body.Tags = tags;
+            }
+
+            request.AddJsonBody(body);
+            this.Execute(request);
         }
 
         /// <summary>
@@ -436,6 +488,32 @@ namespace Processa.Services.Aspen.Client.Fluent
             this.PerformReversal(url, reversalInfo);
         }
 
+        internal void WithdrawalReversalAvoidingValidation(
+            string transactionId,
+            string docType,
+            string docNumber,
+            string accountType,
+            object amount,
+            TagsInfo tags = null,
+            bool excludeTags = false)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Withdrawal, Method.PATCH);
+            dynamic body = new ExpandoObject();
+            body.TransactionId = transactionId;
+            body.DocType = docType;
+            body.DocNumber = docNumber;
+            body.AccountType = accountType;
+            body.Amount = amount;
+
+            if (!excludeTags)
+            {
+                body.Tags = tags;
+            }
+
+            request.AddJsonBody(body);
+            this.Execute(request);
+        }
+
         /// <summary>
         /// Solicita la anulación de un reverso.
         /// </summary>
@@ -450,6 +528,32 @@ namespace Processa.Services.Aspen.Client.Fluent
             string url = Routes.Financial.Refund;
             ReversalInfo reversalInfo = new ReversalInfo(transactionId, docType, docNumber, accountType, amount, tags);
             this.PerformReversal(url, reversalInfo);
+        }
+
+        internal void RefundReversalAvoidingValidation(
+            string transactionId,
+            string docType,
+            string docNumber,
+            string accountType,
+            object amount,
+            TagsInfo tags = null,
+            bool excludeTags = false)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Financial.Refund, Method.PATCH);
+            dynamic body = new ExpandoObject();
+            body.TransactionId = transactionId;
+            body.DocType = docType;
+            body.DocNumber = docNumber;
+            body.AccountType = accountType;
+            body.Amount = amount;
+
+            if (!excludeTags)
+            {
+                body.Tags = tags;
+            }
+
+            request.AddJsonBody(body);
+            this.Execute(request);
         }
 
         private void PerformReversal(string url, ReversalInfo reversalInfo)
