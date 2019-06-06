@@ -1337,7 +1337,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount(string.Empty));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -1345,7 +1345,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("   "));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -1353,7 +1353,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("XXX"));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -2055,7 +2055,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 InvokePaymentReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -2063,7 +2063,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -2071,7 +2071,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -2585,7 +2585,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount(string.Empty));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -2593,7 +2593,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount("   "));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -2601,7 +2601,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount("XXX"));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -3271,14 +3271,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 exception,
                 "15880",
                 HttpStatusCode.NotFound,
-                $"No se encontró una transacción");
+                "No se encontró una transacción");
 
             // Cuando no es un valor entero falla la serialización...
             exception = Assert.Throws<AspenResponseException>(() =>
                 InvokeWithdrawalReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -3286,7 +3286,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -3294,7 +3294,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -3311,7 +3311,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 exception,
                 "15880",
                 HttpStatusCode.NotFound,
-                $"No se encontró una transacción");
+                "No se encontró una transacción");
         }
 
         [Test, Category("Autonomous-WithdrawalReversal"), Author("dmontalvo")]
@@ -3794,7 +3794,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 InvokeRefundAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -3802,7 +3802,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -3810,7 +3810,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -4263,7 +4263,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 InvokeRefundReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -4271,7 +4271,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
@@ -4279,7 +4279,7 @@ namespace Processa.Services.Aspen.Client.Tests
             exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
-                "15852",
+                "15883",
                 HttpStatusCode.BadRequest,
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
