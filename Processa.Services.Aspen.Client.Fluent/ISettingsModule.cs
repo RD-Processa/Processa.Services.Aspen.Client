@@ -62,5 +62,11 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <returns>Lista de claims habilitados.</returns>
         IList<ClaimSettings> GetClaims();
+
+        /// <summary>
+        /// Obtiene la lista de canales
+        /// </summary>
+        /// <returns>Lista de canales.</returns>
+        IList<ChannelInfo> GetChannels();
     }
 }

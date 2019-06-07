@@ -5,6 +5,9 @@
 // <author>atorrest</author>
 // <date>2019-01-04 04:20 PM</date>
 // ----------------------------------------------------------------------
+
+using RestSharp.Extensions;
+
 namespace Processa.Services.Aspen.Client.Fluent
 {
     using System.Collections.Generic;
@@ -247,15 +250,70 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// Genera la información de un token transaccional de un solo uso.
         /// </summary>
         /// <param name="pinNumber">Pin transaccional del usuario.</param>
+        /// <param name="channelKey">Canal para el token</param>
         /// <param name="metadata">Metadatos que se desean asociar al token.</param>
         /// <param name="amount">Valor del token.</param>
         /// <param name="accountType">Bolsillo para el que se genera el token.</param>
         /// <returns>Instancia de <see cref="ITokenResponseInfo" /> con la información del token.</returns>
-        public ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null, int? amount = null, string accountType = null)
+        public ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null, int? amount = null, string accountType = null, string channelKey = null)
         {
             Throw.IfNullOrEmpty(pinNumber, nameof(pinNumber));
+            if (metadata.HasValue())
+            {
+                Throw.IfEmpty(metadata, nameof(metadata));
+            }
+
+            if (accountType.HasValue())
+            {
+                Throw.IfEmpty(accountType, nameof(accountType));
+            }
+
+            if (channelKey.HasValue())
+            {
+                Throw.IfEmpty(channelKey, nameof(channelKey));
+            }
+
             IRestRequest request = new AspenRequest(this, Routes.Tokens.Root, Method.POST);
-            request.AddJsonBody(new { Metadata = metadata, PinNumber = pinNumber, Amount = amount, AccountType = accountType });
+            request.AddJsonBody(new { Metadata = metadata, PinNumber = pinNumber, Amount = amount, AccountType = accountType, ChannelKey = channelKey });
+            return this.Execute<TokenResponseInfo>(request);
+        }
+
+        internal ITokenResponseInfo GetSingleUseTokenAvoidingValidation(
+            string pinNumber,
+            string metadata = null,
+            object amount = null,
+            string accountType = null,
+            string channelKey = null,
+            bool excludeAmount = false,
+            bool excludeAccountType = false,
+            bool excludeMetadata = false,
+            bool excludeChannelKey = false)
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Tokens.Root, Method.POST);
+            dynamic body = new ExpandoObject();
+            body.pinNumber = pinNumber;
+
+            if (!excludeMetadata)
+            {
+                body.Metadata = metadata;
+            }
+
+            if (!excludeAmount)
+            {
+                body.Amount = amount;
+            }
+
+            if (!excludeAccountType)
+            {
+                body.AccountType = accountType;
+            }
+
+            if (!excludeChannelKey)
+            {
+                body.ChannelKey = channelKey;
+            }
+
+            request.AddJsonBody(body);
             return this.Execute<TokenResponseInfo>(request);
         }
 
@@ -309,6 +367,43 @@ namespace Processa.Services.Aspen.Client.Fluent
             formatter.Add("@[Token]", token);
             IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PUT);
             request.AddJsonBody(new { Metadata = metadata, DocType = docType, DocNumber = docNumber, Amount = amount, AccountType = accountType });
+            this.Execute(request);
+        }
+
+        public void ValidateSingleUseTokenAvoidingValidation(
+            string docType,
+            string docNumber,
+            string token,
+            string metadata = null,
+            object amount = null,
+            string accountType = null,
+            bool excludeAmount = false,
+            bool excludeAccountType = false,
+            bool excludeMetadata = false)
+        {
+            dynamic body = new ExpandoObject();
+            body.DocType = docType;
+            body.DocNumber = docNumber;
+
+            if (!excludeMetadata)
+            {
+                body.Metadata = metadata;
+            }
+
+            if (!excludeAmount)
+            {
+                body.Amount = amount;
+            }
+
+            if (!excludeAccountType)
+            {
+                body.AccountType = accountType;
+            }
+
+            PlaceholderFormatter formatter = new PlaceholderFormatter(Routes.Tokens.Redeem);
+            formatter.Add("@[Token]", token);
+            IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.PUT);
+            request.AddJsonBody(body);
             this.Execute(request);
         }
 
@@ -595,6 +690,8 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="accountType">Tipo de cuenta de la que se toman los fondos.</param>
         /// <param name="amount">Valor del pago.</param>
         /// <param name="tags">Tags relacionados con la solicitud.</param>
+        /// <param name="excludeDocType"></param>
+        /// <param name="excludeDocNumber"></param>
         /// <param name="excludeAmount"></param>
         /// <param name="excludeAccountType"></param>
         /// <param name="excludeTags"></param>
@@ -605,14 +702,25 @@ namespace Processa.Services.Aspen.Client.Fluent
             string accountType,
             object amount,
             TagsInfo tags = null,
+            bool excludeDocType = false,
+            bool excludeDocNumber = false,
             bool excludeAmount = false,
             bool excludeAccountType = false,
             bool excludeTags = false)
         {
             IRestRequest request = new AspenRequest(this, Routes.Financial.Payment, Method.POST);
             dynamic body = new ExpandoObject();
-            body.DocType = docType;
-            body.DocNumber = docNumber;
+
+            if (!excludeDocType)
+            {
+                body.DocType = docType;
+            }
+
+            if (!excludeDocNumber)
+            {
+                body.DocNumber = docNumber;
+            }
+            
             body.Token = token;
 
             if (!excludeAmount)

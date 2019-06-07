@@ -9,6 +9,7 @@ namespace Processa.Services.Aspen.Client.Tests
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Net;
     using Entities;
@@ -943,8 +944,10 @@ namespace Processa.Services.Aspen.Client.Tests
             }
         }
 
-        [Test]
-        public void RequestSingleUseTokenDelegated()
+        #region GetSingleUseToken
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenThenWorks()
         {
             DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
@@ -953,23 +956,484 @@ namespace Processa.Services.Aspen.Client.Tests
                 .Authenticate(userCredentials)
                 .GetClient();
 
-            client.CurrentUser.RequestSingleUseToken();
+            // El canal no es requerido y puede ser nulo, por lo que se debe generar un token.
+            Assert.DoesNotThrow(() => client.Financial.GetSingleUseToken("141414"));
+
+            // Cuando no se establece canal, la respuesta debe indicar que se usó el predeterminado.
+            ITokenResponseInfo tokenResponseInfo = client.Financial.GetSingleUseToken("141414");
+            Assert.NotNull(tokenResponseInfo);
+            Assert.NotNull(tokenResponseInfo.Token);
+            Assert.NotNull(tokenResponseInfo.ChannelKey);
+            Assert.AreEqual("*", tokenResponseInfo.ChannelKey);
+
+            // Cuando se establece un canal, en el resultado debe coincidir con el mismo canal.
+            IList<ChannelInfo> channels = client.Settings.GetChannels();
+            CollectionAssert.IsNotEmpty(channels);
+
+            foreach (ChannelInfo channel in channels)
+            {
+                tokenResponseInfo = client.Financial.GetSingleUseToken("141414", channelKey: channel.Key);
+                Assert.NotNull(tokenResponseInfo);
+                Assert.NotNull(tokenResponseInfo.Token);
+                Assert.NotNull(tokenResponseInfo.ChannelKey);
+                Assert.AreEqual(channel.Key, tokenResponseInfo.ChannelKey);
+            }
         }
 
-        [Test]
-        public void GetSingleUseToken()
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButPinNumberIsMissingOrInvalidThenAnExceptionIsThrows()
         {
             DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
             IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
-                                              .RoutingTo(this.delegatedAppInfoProvider)
-                                              .WithIdentity(this.delegatedAppInfoProvider)
-                                              .Authenticate(userCredentials)
-                                              .GetClient();
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
 
-            var response = client.Financial.GetSingleUseToken("141414");
-            PrintOutput("Token", response);
-            Assert.IsTrue(true);
+            void GetSingleUseTokenAvoidingValidation(string pinNumber) =>
+                ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation(pinNumber);
+
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(null));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'PinNumber' no puede ser nulo ni vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'PinNumber' no puede ser nulo ni vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'PinNumber' no puede ser nulo ni vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken("áéíóú"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'PinNumber' debe coincidir con el patrón ^[ -~]{1,10}$");
+
+            string randomPinNumber = Guid.NewGuid().ToString("N").Substring(0, 12);
+            exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken(randomPinNumber));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'PinNumber' debe coincidir con el patrón ^[ -~]{1,10}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken(randomPinNumber, "áéíóú"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'PinNumber' debe coincidir con el patrón ^[ -~]{1,10}$");
         }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButCheckPinNumberIsInvalidThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            string[] randomPinNumbers =
+            {
+                Guid.NewGuid().ToString("N").Substring(0, 10),
+                "yyyy",
+                "xxxxxx",
+                new Random().Next(1000, 9999).ToString(),
+                new Random().Next(10000, 99999).ToString(),
+                new Random().Next(100000, 999999).ToString(),
+                $"++{new Random().Next(999, 9999)}++"
+            };
+
+            foreach (string randomPinNumber in randomPinNumbers)
+            {
+                AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken(randomPinNumber));
+                AssertAspenResponseException(
+                    exception,
+                    "15862",
+                    HttpStatusCode.Unauthorized,
+                    @"Pin de usuario/app no es valido. No corresponde con el registrado");
+            }
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButAccountTypeIsInvalidThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            void GetSingleUseTokenAvoidingValidation(string accountType) =>
+                ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", accountType: accountType);
+
+            ITokenResponseInfo GetSingleUseToken(string accountType) =>
+                client.Financial.GetSingleUseToken("141414", accountType: accountType);
+
+            // Aunque el tipo de cuenta no es obligatorio, no se acepta el vacío.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' no puede ser vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' no puede ser vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("XX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("XXXXX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("8*"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("8000"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButChannelKeyIsInvalidThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            void GetSingleUseTokenAvoidingValidation(string channelKey) =>
+                ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", channelKey: channelKey);
+
+            ITokenResponseInfo GetSingleUseToken(string channelKey) =>
+                client.Financial.GetSingleUseToken("141414", channelKey: channelKey);
+
+            // Aunque el canal no es obligatorio, no se acepta vacío.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'ChannelKey' no puede ser vacío");
+
+            // Aunque el canal no es obligatorio, no se acepta solo espacios en blanco.
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'ChannelKey' no puede ser vacío");
+
+            string invalidChannelKey = "Y";
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            AssertAspenResponseException(
+                exception,
+                "15858",
+                HttpStatusCode.BadRequest,
+                $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+            invalidChannelKey = "XX";
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            AssertAspenResponseException(
+                exception,
+                "15858",
+                HttpStatusCode.BadRequest,
+                $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+            invalidChannelKey = "XXXX";
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            AssertAspenResponseException(
+                exception,
+                "15858",
+                HttpStatusCode.BadRequest,
+                $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+            invalidChannelKey = new Random().Next(99, 99999).ToString();
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            AssertAspenResponseException(
+                exception,
+                "15858",
+                HttpStatusCode.BadRequest,
+                $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+            invalidChannelKey = "****";
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            AssertAspenResponseException(
+                exception,
+                "15858",
+                HttpStatusCode.BadRequest,
+                $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+            invalidChannelKey = Guid.NewGuid().ToString();
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            AssertAspenResponseException(
+                exception,
+                "15858",
+                HttpStatusCode.BadRequest,
+                $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+            // Aunque el canal existe, el nombre debe coincidir exactamente.
+            IList<ChannelInfo> channels = client.Settings.GetChannels();
+            CollectionAssert.IsNotEmpty(channels);
+
+            foreach (ChannelInfo channel in channels)
+            {
+                invalidChannelKey = channel.Key.ToLower();
+                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+                AssertAspenResponseException(
+                    exception,
+                    "15858",
+                    HttpStatusCode.BadRequest,
+                    $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+                invalidChannelKey = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(channel.Key.ToLower());
+                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+                AssertAspenResponseException(
+                    exception,
+                    "15858",
+                    HttpStatusCode.BadRequest,
+                    $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+
+                invalidChannelKey = $" {channel.Key} ";
+                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+                AssertAspenResponseException(
+                    exception,
+                    "15858",
+                    HttpStatusCode.BadRequest,
+                    $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
+            }
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButMetadataIsInvalidThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            void GetSingleUseTokenAvoidingValidation(string metadata) =>
+                ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", metadata: metadata);
+
+            ITokenResponseInfo GetSingleUseToken(string metadata) =>
+                client.Financial.GetSingleUseToken("141414", metadata: metadata);
+
+            // Aunque el metadata no es obligatorio, no se acepta el vacío.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Metadata' no puede ser vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Metadata' no puede ser vacío");
+
+            string[] metadatas =
+            {
+                "áéíóú",
+                "ÁÉÍÓÚ",
+                $"{Guid.NewGuid()}-{Guid.NewGuid()}"
+            };
+
+            foreach (string metadata in metadatas)
+            {
+                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(metadata));
+                AssertAspenResponseException(
+                    exception,
+                    "15852",
+                    HttpStatusCode.BadRequest,
+                    @"'Metadata' debe coincidir con el patrón ^[ -~]{1,50}$");
+            }
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButAmountIsInvalidThenAnExceptionIsThrows()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            void GetSingleUseTokenAvoidingValidation(object amount) =>
+                ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", amount: amount);
+
+            // Valor menor a cero...
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(-1));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            // Valor menor a cero...
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("-1"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Amount' debe ser mayor que cero");
+
+            // Cuando no es un valor entero falla por serialización.
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            AssertAspenResponseException(
+                exception,
+                "15883",
+                HttpStatusCode.BadRequest,
+                @"Valor inesperado al analizar los datos de solicitud en formato JSON");
+
+            // Cuando no es un valor entero falla por serialización.
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("XXX"));
+            AssertAspenResponseException(
+                exception,
+                "15883",
+                HttpStatusCode.BadRequest,
+                @"Valor inesperado al analizar los datos de solicitud en formato JSON");
+
+            // Cuando no es un valor entero falla por serialización.
+            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("10000000000000000"));
+            AssertAspenResponseException(
+                exception,
+                "15883",
+                HttpStatusCode.BadRequest,
+                @"Valor inesperado al analizar los datos de solicitud en formato JSON");
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButAccountTypeIsNullOrMissingThenWorks()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // El tipo de cuenta no es requerido y puede ser nulo, por lo que se debe generar un token.
+            Assert.DoesNotThrow(() => client.Financial.GetSingleUseToken("141414"));
+
+            // No se requiere incluir la propiedad en el body, por que debe generar un token.
+            Assert.DoesNotThrow(() => ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", excludeAccountType: true));
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButChannelKeyIsNullOrMissingThenWorks()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // El canal no es requerido y puede ser nulo, por lo que se debe generar un token.
+            Assert.DoesNotThrow(() => client.Financial.GetSingleUseToken("141414"));
+
+            // Cuando no se establece canal, se usa el predeterminado
+            ITokenResponseInfo tokenResponseInfo1 = client.Financial.GetSingleUseToken("141414");
+            Assert.NotNull(tokenResponseInfo1);
+            Assert.AreEqual("*", tokenResponseInfo1.ChannelKey);
+
+            // No se requiere incluir la propiedad en el body, por que debe generar un token.
+            Assert.DoesNotThrow(() => ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", excludeChannelKey: true));
+
+            // Cuando no se establece canal, se usa el predeterminado
+            ITokenResponseInfo tokenResponseInfo2 = ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", excludeAccountType: true);
+            Assert.NotNull(tokenResponseInfo2);
+            Assert.AreEqual("*", tokenResponseInfo2.ChannelKey);
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButMetadataIsNullOrMissingThenWorks()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            // El tipo de cuenta no es requerido y puede ser nulo, por lo que se debe generar un token.
+            Assert.DoesNotThrow(() => client.Financial.GetSingleUseToken("141414"));
+
+            // No se requiere incluir la propiedad en el body, por que debe generar un token.
+            Assert.DoesNotThrow(() => ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", excludeMetadata: true));
+        }
+
+        [Test, Category("Delegated-Get-Single-Use-Token"), Author("dmontalvo")]
+        public void GivenAUserIdentityWhenGetSingleUseTokenButAmountIsNullOrMissingOrZeroThenWorks()
+        {
+            DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
+            IFluentClient client = AspenClient.Initialize(AppScope.Delegated)
+                .RoutingTo(this.delegatedAppInfoProvider)
+                .WithIdentity(this.delegatedAppInfoProvider)
+                .Authenticate(userCredentials)
+                .GetClient();
+
+            void GetSingleUseTokenAvoidingValidation(object amount) =>
+                ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", amount: amount);
+
+            // Monto igual a cero puede generar token.
+            Assert.DoesNotThrow(() => GetSingleUseTokenAvoidingValidation(0));
+
+            // Cuando se establece vacío igual puede generar token.
+            Assert.DoesNotThrow(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+
+            // Monto nulo puede generar token puede generar token.
+            Assert.DoesNotThrow(() => GetSingleUseTokenAvoidingValidation(null));
+
+            // Sin monto puede generar token puede generar token.
+            Assert.DoesNotThrow(() => ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", excludeAmount: true));
+
+            // Monto establecido como cadena puede generar token.
+            Assert.DoesNotThrow(() => GetSingleUseTokenAvoidingValidation("10000"));
+        }
+        #endregion
 
         [Test]
         [Category("TransferAccountDelegated")]
@@ -1020,7 +1484,7 @@ namespace Processa.Services.Aspen.Client.Tests
             account.PinNumber = new Random().Next(0, 999999).ToString("000000");
             AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(account));
             Assert.That(exc.EventId, Is.EqualTo("15862"));
-            StringAssert.IsMatch("Pin invalido", exc.Message);
+            StringAssert.IsMatch("Pin de usuario/app no es valido", exc.Message);
         }
 
         [Test]
@@ -1242,6 +1706,8 @@ namespace Processa.Services.Aspen.Client.Tests
 
         #endregion
 
+        #region UpdatePin
+
         /// <summary>
         /// Se produce una excepción si se intenta invocar la operación de reversión sin el identificador de la transacción original.
         /// </summary>
@@ -1262,15 +1728,17 @@ namespace Processa.Services.Aspen.Client.Tests
                 .GetClient();
 
             // Actualizar el pin funciona.
-            client.CurrentUser.UpdatePin("141414", "151515");
+            Assert.DoesNotThrow(() => client.CurrentUser.UpdatePin("141414", "151515"));
 
             // Pin anterior ya no es valido para intentar actualizar.
             AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.UpdatePin("141414", "161616"));
             AssertAspenResponseException(
                 exception,
-                null,
-                HttpStatusCode.NotFound,
-                "Not Found");
+                "15861",
+                HttpStatusCode.NotAcceptable,
+                "Para cambiar el Pin se requiere el valor de su Pin actual");
         }
+
+        #endregion
     }
 }

@@ -117,6 +117,16 @@ namespace Processa.Services.Aspen.Client.Fluent
             }
 
             return response.Data;
-        }    
+        }
+
+        /// <summary>
+        /// Obtiene la lista de canales
+        /// </summary>
+        /// <returns>Lista de canales.</returns>
+        public IList<ChannelInfo> GetChannels()
+        {
+            IRestRequest request = new AspenRequest(this, Routes.Tokens.Channels, Method.GET);
+            return this.Execute<List<ChannelInfo>>(request);
+        }
     }
 }

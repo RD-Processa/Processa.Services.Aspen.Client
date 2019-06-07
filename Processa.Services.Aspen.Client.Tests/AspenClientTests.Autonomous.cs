@@ -517,8 +517,7 @@ namespace Processa.Services.Aspen.Client.Tests
         #region SendToken
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void
-            GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButDocTypeIsMissingOrNotRecognizedThenAnExceptionIsThrows()
+        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButDocTypeIsMissingOrNotRecognizedThenAnExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -589,8 +588,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void
-            GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButDocNumberIsMissingOrInvalidThenAnExceptionIsThrows()
+        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButDocNumberIsMissingOrInvalidThenAnExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -670,8 +668,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void
-            GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButMetadataIsInvalidThenAnExceptionIsThrows()
+        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButMetadataIsInvalidThenAnExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -685,13 +682,20 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RequestSingleUseToken("CC", "52080323", invalidMetadata, tags: tags);
 
             // Metadata vacío...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(string.Empty));
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
-                @"'Metadata' debe coincidir con el patrón ^[ -~]{1,50}$");
+                @"'Metadata' no puede ser vacío");
+
+            // Metadata vacío...
+            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'Metadata' no puede ser vacío");
 
             // Los acentos no son admitidos...
             string[] emphasis = {"á", "é", "í", "ó", "ú"};
@@ -726,8 +730,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void
-            GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButTagsIsMissingOrInvalidThenAnExceptionIsThrows()
+        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButTagsIsMissingOrInvalidThenAnExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -825,9 +828,6 @@ namespace Processa.Services.Aspen.Client.Tests
             // Con las propiedades metadata y tags nulas en el body.
             Assert.DoesNotThrow(() => client.Financial.RequestSingleUseToken("CC", "52080323"));
 
-            // Con metadata vacía en el body.
-            Assert.DoesNotThrow(() => client.Financial.RequestSingleUseToken("CC", "52080323", "    "));
-
             // Con metadata.
             Assert.DoesNotThrow(() =>
                 client.Financial.RequestSingleUseToken("CC", "52080323", "RANDOM_DATA_BY_ACQUIRER"));
@@ -847,8 +847,7 @@ namespace Processa.Services.Aspen.Client.Tests
         }
 
         [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void
-            GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButResponseFromSystemKrakenWasUnsuccessfulThenAnExceptionIsThrows()
+        public void GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButResponseFromSystemKrakenWasUnsuccessfulThenAnExceptionIsThrows()
         {
             IFluentClient client = AspenClient.Initialize()
                 .RoutingTo(this.autonomousAppInfoProvider)
@@ -868,32 +867,8 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.NotNull(exception.Content);
             Assert.IsNotEmpty(exception.Content);
             Assert.Contains("notificationResponseCode", exception.Content.Keys);
-            Assert.IsNotEmpty(exception.Content["notificationResponseCode"].ToString());
             Assert.Contains("notificationResponseMessage", exception.Content.Keys);
-            Assert.IsNotEmpty(exception.Content["notificationResponseMessage"].ToString());
         }
-
-        [Test, Category("Autonomous-Send-Token"), Author("dmontalvo")]
-        public void
-            GivenARecognizedIdentityWhenRequestSingleUseTokenForAnUserButSystemKrakenNotWorkingThenAnExceptionIsThrows()
-        {
-            IFluentClient client = AspenClient.Initialize()
-                .RoutingTo(this.autonomousAppInfoProvider)
-                .WithIdentity(this.autonomousAppInfoProvider)
-                .Authenticate()
-                .GetClient();
-
-            // NOTAS:
-            // 1. Cambie de la configuración de la aplicación para establecer un el RoutingKey de KRAKEN que no exista.
-            // Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Kraken:SendMessageRoutingKey' -Value 'Kraken.NotificationRoutingKey.NotFound'
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.RequestSingleUseToken("CC", "0000000000"));
-            AssertAspenResponseException(
-                exception,
-                "20100",
-                HttpStatusCode.ServiceUnavailable,
-                @"No fue posible enviar el mensaje. Por favor vuelva a intentar en unos minutos");
-        }
-
         #endregion
 
         #region Payment
@@ -923,6 +898,20 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'DocType' no puede ser nulo ni vacío");
 
+            // Tipo de documento no incluido en el body...
+            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
+                null,
+                "52080323",
+                "585730",
+                "80",
+                10000,
+                excludeDocType: true));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocType' no puede ser nulo ni vacío");
+
             // Tipo de documento vacío...
             exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
             AssertAspenResponseException(
@@ -940,6 +929,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("X"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'X' no se reconoce como un tipo de identificación");
+
+            // Tipo de documento no reconocido...
             exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
             AssertAspenResponseException(
                 exception,
@@ -949,20 +946,37 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("C"));
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
-                @"'C' no se reconoce como un tipo de identificación");
+                @"'XXXXX' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("ZZZZZZ"));
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
-                @"'ZZZZZZ' no se reconoce como un tipo de identificación");
+                @"'1' no se reconoce como un tipo de identificación");
+
+            // Tipo de documento no reconocido...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("10"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'10' no se reconoce como un tipo de identificación");
+
+
+            // Tipo de documento no reconocido...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("10000"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'10000' no se reconoce como un tipo de identificación");
         }
 
         [Test, Category("Autonomous-Payment-BadRequest"), Author("dmontalvo")]
@@ -984,6 +998,20 @@ namespace Processa.Services.Aspen.Client.Tests
             // Número de documento nulo...
             AspenResponseException exception =
                 Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' no puede ser nulo ni vacío");
+
+            // Número de documento no agregado al body...
+            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
+                    "CC", 
+                    null,
+                    "585730",
+                    "80",
+                    10000,
+                    excludeDocNumber: true));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1030,6 +1058,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
+            // Caracteres especiales...
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("*123456*"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
+
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
             exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomDocNumber));
@@ -1049,10 +1085,42 @@ namespace Processa.Services.Aspen.Client.Tests
                 .Authenticate()
                 .GetClient();
 
-            void InvokePayment(string invalidAccountType) =>
-                client.Financial.Payment("CC", "52080323", "000000", invalidAccountType, 10000);
+            void InvokePaymentAvoidingValidation(string accountType) =>
+                ((AspenClient)client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", accountType, 10000);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
+            void InvokePayment(string accountType) =>
+                client.Financial.Payment("CC", "52080323", "000000", accountType, 10000);
+
+            // Aunque el tipo de cuenta no es obligatorio, no se acepta el vacío.
+            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' no puede ser vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("   "));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' no puede ser vacío");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXX"));
+            AssertAspenResponseException(
+                exception,
+                "15852",
+                HttpStatusCode.BadRequest,
+                @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
+
+            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("8*"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1066,11 +1134,22 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            // No requiere el tipo de cuenta y por defecto se usará el tipo de cuenta configurada.
-            void InvokePaymentWithoutAccountType() => ((AspenClient) client.Financial).PaymentAvoidingValidation("CC",
-                "52080323", "000000", null, 10000, null, excludeAccountType: true, excludeTags: true);
+            // No requiere el tipo de cuenta y puede ser nulo.
+            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AssertAspenResponseException(
+                exception,
+                "15875",
+                HttpStatusCode.NotFound,
+                @"Falló la redención del token. No se encontró un token con los valores proporcionados");
 
-            exception = Assert.Throws<AspenResponseException>(InvokePaymentWithoutAccountType);
+            // No requiere el tipo de cuenta y no requiere ser incluido en el body.
+            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
+                "CC", 
+                "52080323", 
+                "000000", 
+                null, 
+                10000,
+                excludeAccountType: true));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1390,7 +1469,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Autonomous: Send-TranToken -DocNumber '1073688252' -DocType 'CC'
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
-            Assert.DoesNotThrow(() => client.Financial.Payment("CC", "1073688252", "130314", "80", 10000,
+            Assert.DoesNotThrow(() => client.Financial.Payment("CC", "1073688252", "983862", "80", 10000,
                 new TagsInfo(cardAcceptorId: "00000014436950")));
         }
 
@@ -1408,7 +1487,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Bifrost:Channel' -Value 'COMPMOV60A6GLOB8L013'
             // 2. Genere un token manualmente:
             // Use Aspen.Autonomous: Send-TranToken -DocNumber '52080323' -DocType 'CC'
-            void InvokePayment() => client.Financial.Payment("CC", "52080323", "427975", "80", 10000);
+            void InvokePayment() => client.Financial.Payment("CC", "52080323", "306264", "80", 10000);
 
             AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
             AssertAspenResponseException(
@@ -3263,7 +3342,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 exception,
                 "15880",
                 HttpStatusCode.NotFound,
-                $"No se encontró una transacción");
+                "No se encontró una transacción");
 
             // Sin valor
             exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
@@ -3842,7 +3921,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // NOTAS:
             // 1. Genere una transacción exitosa de pago y reemplace el número de autorización para la anulación.
             TagsInfo tags = new TagsInfo(cardAcceptorId: "00000014436950");
-            Assert.DoesNotThrow(() => client.Financial.Refund("571020", "CC", "1073688252", "80", 10000, tags));
+            Assert.DoesNotThrow(() => client.Financial.Refund("129130", "CC", "1073688252", "80", 10000, tags));
         }
 
         [Test, Category("Autonomous-Refund"), Author("dmontalvo")]

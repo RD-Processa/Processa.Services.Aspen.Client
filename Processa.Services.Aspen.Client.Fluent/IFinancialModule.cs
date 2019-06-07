@@ -106,8 +106,9 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="metadata">Metadatos que se desean asociar al token.</param>
         /// <param name="amount">Valor del token.</param>
         /// <param name="accountType">Bolsillo para el que se genera el token.</param>
+        /// <param name="channelKey">Canal de uso del token</param>
         /// <returns>Instancia de <see cref="ITokenResponseInfo" /> con la información del token.</returns>
-        ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null, int? amount = null, string accountType = null);
+        ITokenResponseInfo GetSingleUseToken(string pinNumber, string metadata = null, int? amount = null, string accountType = null, string channelKey = null);
 
         /// <summary>
         /// Obtiene una imagen (representación en formato base64) de un token transaccional de un solo uso.

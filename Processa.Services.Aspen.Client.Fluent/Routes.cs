@@ -213,12 +213,7 @@ namespace Processa.Services.Aspen.Client.Fluent
             /// <summary>
             /// Endpoint para obtener los canales disponibles para emitir tokens transaccionales.
             /// </summary>
-            public static string Channels => "/channels";
-
-            /// <summary>
-            /// Endpoint para generar un token transaccional.
-            /// </summary>
-            public static string GenerateDelegated => "/";
+            public static string Channels => $"{Tokens.Root}/channels";
 
             /// <summary>
             /// Endpoint para redimir un token transaccional.
