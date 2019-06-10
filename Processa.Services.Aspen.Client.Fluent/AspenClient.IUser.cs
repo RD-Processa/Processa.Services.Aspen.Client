@@ -83,21 +83,8 @@ namespace Processa.Services.Aspen.Client.Fluent
             return await this.ExecuteAsync(request);
         }
 
-        #region RequestSingleUseToken
-
         /// <summary>
-        /// Requests the single use token.
-        /// </summary>
-        /// <param name="pinNumber">The pin number.</param>
-        public void RequestSingleUseToken(string pinNumber)
-        {
-            IRestRequest request = new AspenRequest(this, Routes.Tokens.Root, Method.POST);
-            request.AddJsonBody(new { PinNumber = pinNumber, Metadata = "xxxx" });
-            this.Execute(request);
-        }
-
-        /// <summary>
-        /// Solicita el envío de un token transaccional por SMS para un usuario autenticado.
+        /// Solicita el envío de un token transaccional para un usuario autenticado.
         /// </summary>
         public void RequestSingleUseToken()
         {
@@ -116,8 +103,6 @@ namespace Processa.Services.Aspen.Client.Fluent
             IRestRequest request = new AspenRequest(this, Routes.Tokens.RequestToken, Method.POST);
             return await this.ExecuteAsync(request);
         }
-
-        #endregion
 
         /// <summary>
         /// Actualiza el pin transaccional del usuario actual a partir del pin o clave actual.
