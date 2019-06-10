@@ -19,14 +19,13 @@ namespace Processa.Services.Aspen.Client.Entities
         /// <param name="docNumber">Número de documento del titular de la cuenta que se desea registrar.</param>
         /// <param name="alias">Nombre con el que se desea identificar la cuenta que se desea registrar.</param>
         /// <param name="accountNumber">Número de cuenta que se desea registrar o <c>null</c> para que el sistema busque el número de cuenta asociado con el tarjehabiente.</param>
-        public TransferAccountRequestRequestInfo(string docType, string docNumber, string @alias, string accountNumber = null)
+        public TransferAccountRequestRequestInfo(string docType, string docNumber, string @alias = null, string accountNumber = null)
         {
 
 #if !DEBUG
 {
             Throw.IfNullOrEmpty(docType, nameof(docType));
             Throw.IfNullOrEmpty(docNumber, nameof(docNumber));
-            Throw.IfNullOrEmpty(@alias, nameof(@alias));
 }
 #endif
 

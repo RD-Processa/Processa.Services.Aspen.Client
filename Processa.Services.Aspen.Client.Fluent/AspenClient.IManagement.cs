@@ -11,6 +11,7 @@ namespace Processa.Services.Aspen.Client.Fluent
     using Internals;
     using RestSharp;
     using System.Collections.Generic;
+    using System.Linq;
 
     /// <summary>
     /// Implementa un cliente que permite la conexión con el servicio Aspen.
@@ -65,7 +66,13 @@ namespace Processa.Services.Aspen.Client.Fluent
             };
 
             IRestRequest request = new AspenRequest(this, Routes.Management.LinkTransferAccount.ReplaceTokens(tokens), Method.GET);
-            return this.Execute<IList<TransferAccountResponseInfo>>(request);
+            var response = this.Execute<IList<TransferAccountResponseInfo>>(request);
+            if (response == null)
+            {
+                return Enumerable.Empty<TransferAccountResponseInfo>().ToList();
+            }
+
+            return response;
         }
 
         /// <summary>
