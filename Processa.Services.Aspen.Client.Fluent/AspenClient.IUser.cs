@@ -7,9 +7,12 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Fluent
 {
+    using System.Net;
     using System.Threading.Tasks;
+    using Entities;
     using Internals;
     using RestSharp;
+    using Throw = Internals.Throw;
 
     /// <summary>
     /// Implementa un cliente que permite la conexión con el servicio Aspen.
@@ -28,23 +31,8 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
         public void SetPin(string pinNumber, string activationCode)
         {
-            Throw.IfNullOrEmpty(pinNumber, nameof(pinNumber));
-            Throw.IfNullOrEmpty(activationCode, nameof(activationCode));
-
             IRestRequest request = new AspenRequest(this, Routes.Users.Pin, Method.POST);
             request.AddJsonBody(new { PinNumber = pinNumber, ActivationCode = activationCode });
-            this.Execute(request);
-        }
-
-        /// <summary>
-        /// Establece el pin transaccional del usuario actual sin validar localmente. Se expone como internal con el fin de validar el comportamiento del servicio Aspen.
-        /// </summary>
-        /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
-        /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
-        internal void SetPinAvoidingValidation(string pinNumber, string activationCode)
-        {
-            IRestRequest request = new AspenRequest(this, Routes.Users.Pin, Method.POST);
-            request.AddJsonBody(new {PinNumber = pinNumber, ActivationCode = activationCode});
             this.Execute(request);
         }
 
@@ -67,10 +55,13 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS.
         /// </summary>
-        public void RequestActivationCode()
+        /// <param name="nickname">Nombre con el que se registra el usuario. Solo para ambientes de desarrollo.</param>
+        /// <returns>En ambientes de desarrollo, una instancia de <see cref="IActivationCodeInfo" /> con la información de los datso generados.</returns>
+        public IActivationCodeInfo RequestActivationCode(string nickname = null)
         {
             IRestRequest request = new AspenRequest(this, Routes.Users.ActivationCode, Method.POST);
-            this.Execute(request);
+            request.AddJsonBody(new { Nickname = nickname });
+            return this.Execute<ActivationCodeInfo>(request);
         }
 
         /// <summary>

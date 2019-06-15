@@ -8,6 +8,7 @@
 namespace Processa.Services.Aspen.Client.Fluent.Internals
 {
     using System;
+    using System.Reflection;
     using Auth;
     using Providers;
 
@@ -30,18 +31,20 @@ namespace Processa.Services.Aspen.Client.Fluent.Internals
         /// Obtiene el último token de autenticación generado o  <see langword="null" /> si no se ha obtenido ninguno.
         /// </summary>
         /// <returns>Instancia que implementa <see cref="IAuthToken"/> con el valor del último token generado.</returns>
-        internal static IAuthToken GetCurrentToken()
+        internal static IAuthToken GetCurrentToken(AppScope scope)
         {
-            return AppDomain.CurrentDomain.GetData(TokenCacheKey) as IAuthToken;
+            string cacheKey = $"{scope.ToString()}|{TokenCacheKey}";
+            return AppDomain.CurrentDomain.GetData(cacheKey) as IAuthToken;
         }
 
         /// <summary>
         /// Guarda el último token de autenticación generado.
         /// </summary>
         /// <param name="authToken">Instancia del token que se debe guardar.</param>
-        internal static void SetCurrentToken(IAuthToken authToken)
+        internal static void SetCurrentToken(IAuthToken authToken, AppScope scope)
         {
-           AppDomain.CurrentDomain.SetData(TokenCacheKey, authToken);
+            string cacheKey = $"{scope.ToString()}|{TokenCacheKey}";
+            AppDomain.CurrentDomain.SetData(cacheKey, authToken);
         }
 
         /// <summary>
@@ -49,7 +52,12 @@ namespace Processa.Services.Aspen.Client.Fluent.Internals
         /// </summary>
         internal static void Reset()
         {
-            AppDomain.CurrentDomain.SetData(TokenCacheKey, null);
+            FieldInfo[] fields = typeof(AppScope).GetFields(BindingFlags.Public | BindingFlags.Static);
+            foreach (FieldInfo field in fields)
+            {
+                AppDomain.CurrentDomain.SetData($"{field.Name}|{TokenCacheKey}", null);
+            }
+
             AppDomain.CurrentDomain.SetData(DeviceCacheKey, null);
         }
 

@@ -36,7 +36,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// <summary>
         /// Para uso interno. Tiempo de respuesta máximo para una solicitud.
         /// </summary>
-        private const int MaximumResponseTime = 2000;
+        private const int MaximumResponseTime = 3000;
 
         /// <summary>
         /// Se ejecuta justo antes de llamar a cada método de prueba.
@@ -70,7 +70,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// </summary>
         /// <returns>isntancia de <see cref="DelegatedUserInfo"/> con la información de auteticación del usuario.</returns>
         /// <exception cref="SecurityException">Missing credentials for Aspen:DelegatedUser. See cmdkey utility http://bit.ly/cmdkeyutil</exception>
-        private static DelegatedUserInfo GetDelegatedUserCredentials()
+        protected static DelegatedUserInfo GetDelegatedUserCredentials()
         {
             Credential credential = new Credential { Target = "Aspen:DelegatedUser" };
             if (!credential.Exists())

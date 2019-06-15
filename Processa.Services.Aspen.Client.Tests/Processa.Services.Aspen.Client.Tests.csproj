@@ -83,10 +83,16 @@
       <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Diagnostics.EventLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.EventLog.4.5.0\lib\net461\System.Diagnostics.EventLog.dll</HintPath>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.1\lib\netstandard2.0\System.Memory.dll</HintPath>
     </Reference>
+    <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
@@ -95,12 +101,30 @@
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.1\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Security" />
+    <Reference Include="System.Security.AccessControl, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.4.5.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
     <Reference Include="System.Security.Cryptography.ProtectedData, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Security.Cryptography.ProtectedData.4.5.0\lib\net461\System.Security.Cryptography.ProtectedData.dll</HintPath>
     </Reference>
+    <Reference Include="System.Security.Permissions, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Permissions.4.5.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.4.5.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.ServiceProcess.ServiceController, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ServiceProcess.ServiceController.4.5.0\lib\net461\System.ServiceProcess.ServiceController.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActivationCodeAttribute.cs" />
+    <Compile Include="AspenClientTests.ActivationCode.cs">
+      <DependentUpon>AspenClientTests.cs</DependentUpon>
+    </Compile>
     <Compile Include="AspenClientTests.Autonomous.cs">
       <DependentUpon>AspenClientTests.cs</DependentUpon>
     </Compile>
@@ -113,13 +137,19 @@
     <Compile Include="AspenClientTests.LifecycleToken.cs">
       <DependentUpon>AspenClientTests.cs</DependentUpon>
     </Compile>
+    <Compile Include="AspenClientTests.SetUserPin.cs">
+      <DependentUpon>AspenClientTests.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AspenExceptionConstraint.cs" />
     <Compile Include="CustomSettings.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FutureEpochGenerator.cs" />
     <Compile Include="HardCodedSettings.cs" />
+    <Compile Include="Is.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecognizedUserInfo.cs" />
     <Compile Include="NullEmptyNonceGenerator.cs" />
+    <Compile Include="SetUserPinAttribute.cs" />
     <Compile Include="SingleUseNonceGenerator.cs" />
     <Compile Include="UnsteadyHeaderManager.cs" />
   </ItemGroup>

@@ -4680,9 +4680,10 @@ namespace Processa.Services.Aspen.Client.Tests
             string[] invalidDocTypes = { "CC", "NIT", "TI", "CE", "PAS" };
             void LinkTransferAccount(string docType)
             {
-                string randomDocNumber = new Random().Next().ToString("000000000000");
-                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(docType, randomDocNumber, "áéíóú");
-                client.Management.LinkTransferAccount("CC", randomDocNumber, accountRequestInfo);
+                string randomDocNumber1 = new Random(Guid.NewGuid().GetHashCode()).Next().ToString("000000000000");
+                string randomDocNumber2 = new Random(Guid.NewGuid().GetHashCode()).Next().ToString("000000000000");
+                ITransferAccountRequestInfo accountRequestInfo = new TransferAccountRequestRequestInfo(docType, randomDocNumber1, "áéíóú");
+                client.Management.LinkTransferAccount("CC", randomDocNumber2, accountRequestInfo);
             }
 
             foreach (string invalidDocType in invalidDocTypes)

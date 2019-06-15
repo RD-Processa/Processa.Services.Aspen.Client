@@ -7,7 +7,9 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Fluent
 {
+    using System.Net;
     using System.Threading.Tasks;
+    using Entities;
     using RestSharp;
 
     /// <summary>
@@ -33,7 +35,9 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS.
         /// </summary>
-        void RequestActivationCode();
+        /// <param name="nickname">Nombre con el que se registra el usuario. Solo para ambientes de desarrollo.</param>
+        /// <returns>En ambientes de desarrollo, una instancia de <see cref="IActivationCodeInfo"/> con la información de los datso generados.</returns>
+        IActivationCodeInfo RequestActivationCode(string nickname = null);
 
         /// <summary>
         /// Solicita el envío de un código de activación a través de un mensaje SMS de forma asíncrona.

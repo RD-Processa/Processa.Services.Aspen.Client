@@ -34,5 +34,10 @@ namespace Processa.Services.Aspen.Client.Fluent.Auth
             this.Add("Password", password);
             this.Add("DeviceId", deviceId ?? $@"{Environment.UserDomainName}\{Environment.UserName}");
         }
+
+        public string GetNickname()
+        {
+            return $"{this["DocType"]}|{this["DocNumber"]}";
+        }
     }
 }

@@ -214,7 +214,7 @@ namespace Processa.Services.Aspen.Client.Fluent
 
             if (useCache)
             {
-                this.AuthToken = CacheStore.GetCurrentToken();
+                this.AuthToken = CacheStore.GetCurrentToken(this.AppScope);
                 if (this.AuthToken != null)
                 {
                     return this;
@@ -237,7 +237,7 @@ namespace Processa.Services.Aspen.Client.Fluent
             }
 
             this.AuthToken = authToken;
-            CacheStore.SetCurrentToken(authToken);
+            CacheStore.SetCurrentToken(authToken, this.AppScope);
             return this;
         }
 
