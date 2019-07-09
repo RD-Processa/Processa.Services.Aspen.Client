@@ -7,6 +7,8 @@
 // ----------------------------------------------------------------------
 namespace Processa.Services.Aspen.Client.Entities
 {
+    using System.Net;
+
     public interface IActivationCodeInfo
     {
         string Code { get; set; }
@@ -14,5 +16,7 @@ namespace Processa.Services.Aspen.Client.Entities
         string ResponseMessage { get; set; }
         bool Successful { get; set; }
         string Warning { get; set; }
+
+        string Nickname { get; set; }
     }
 }

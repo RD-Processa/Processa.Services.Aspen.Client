@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="AspenResponseException.cs" company="Processa"> 
+// <copyright file="AspenException.cs" company="Processa"> 
 // Copyright (c) 2019 Todos los derechos reservados.
 // </copyright>
 // <author>atorrest</author>
@@ -19,13 +19,13 @@ namespace Processa.Services.Aspen.Client.Fluent
     /// Se produce cuando el servicio Aspen genera una respuesta de error.
     /// </summary>
     /// <seealso cref="System.Exception" />
-    public sealed class AspenResponseException : Exception
+    public sealed class AspenException : Exception
     {
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="AspenResponseException"/>
+        /// Inicializa una nueva instancia de la clase <see cref="AspenException"/>
         /// </summary>
         /// <param name="response">Respuesta generada por el servicio Aspen.</param>
-        public AspenResponseException(IRestResponse response) : base(response?.StatusDescription ?? response?.ErrorMessage ?? "General Exception", response?.ErrorException)
+        public AspenException(IRestResponse response) : base(response?.StatusDescription ?? response?.ErrorMessage ?? "General Exception", response?.ErrorException)
         {
             if (response == null)
             {
@@ -41,9 +41,9 @@ namespace Processa.Services.Aspen.Client.Fluent
             this.StatusDescription = response.StatusDescription ?? string.Empty;
             this.ResponseStatus = response.ResponseStatus;
             this.Message = this.StatusDescription;
-            this.HelpLink = GetResponseHeader(response, "X-PRO-Response-Help");
+            this.HelpLink = GetHeader(response, "X-PRO-Response-Help");
             this.Data["Uri"] = response.ResponseUri?.ToString();
-            this.Data["ResponseTime"] = GetResponseHeader(response, "X-PRO-Response-Time");
+            this.Data["ResponseTime"] = GetHeader(response, "X-PRO-Response-Time");
             this.Data["ResponseContentType"] = response.ContentType;
             Match match = Regex.Match(response.StatusDescription ?? string.Empty, @".*EventId\:?\s+\((?<EventId>\d+)\).*");
             {
@@ -99,12 +99,13 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="response">Instancia con la información de la respuesta.</param>
         /// <param name="name">Nombre de la cabecera a buscar.</param>
-        /// <returns>Valor de la cabecera si se encuentra o <see langword="null" /> si no se encuentra la cabecera en <paramref name="name"/>.</returns>
-        private static string GetResponseHeader(IRestResponse response, string name)
+        /// <param name="comparisonType">Especifica cómo se compararán las cadenas.</param>
+        /// <returns>Valor de la cabecera si se encuentra o <see langword="null" /> si no se encuentra la cabecera en <paramref name="name" />.</returns>
+        private static string GetHeader(IRestResponse response, string name, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
         {
             return response
                    .Headers
-                   .SingleOrDefault(h => h.Name.Equals(name, StringComparison.OrdinalIgnoreCase))?.Value?.ToString();
+                   .SingleOrDefault(h => h.Name.Equals(name, comparisonType))?.Value?.ToString();
         }
     }
 }

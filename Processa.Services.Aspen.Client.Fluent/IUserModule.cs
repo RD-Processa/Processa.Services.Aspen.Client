@@ -22,7 +22,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
-        void SetPin(string pinNumber, string activationCode);
+        void SetPin(string pinNumber, string activationCode, string nickname = null);
 
         /// <summary>
         /// Establece el pin transaccional del usuario actual.

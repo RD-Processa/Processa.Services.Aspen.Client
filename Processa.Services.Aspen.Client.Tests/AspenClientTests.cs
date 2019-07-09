@@ -55,7 +55,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// <param name="expectedStatusCode">HttpStatusCode que se espera en la excepción.</param>
         /// <param name="expectedMessagePattern">Texto o parte del texto, que se espera encontrar en la excepción.</param>
         private static void AssertAspenResponseException(
-            AspenResponseException exception, 
+            AspenException exception, 
             string expectedEventId, 
             HttpStatusCode expectedStatusCode, 
             string expectedMessagePattern = null)

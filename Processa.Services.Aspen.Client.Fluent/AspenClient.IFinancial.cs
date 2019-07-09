@@ -12,6 +12,7 @@ namespace Processa.Services.Aspen.Client.Fluent
 {
     using System.Collections.Generic;
     using System.Dynamic;
+    using System.Linq;
     using Entities;
     using Internals;
     using RestSharp;
@@ -72,7 +73,11 @@ namespace Processa.Services.Aspen.Client.Fluent
             formatter.Add("@[EnrollmentAlias]", enrollmentAlias);
 
             IRestRequest request = new AspenRequest(this, formatter.ToString(), Method.GET);
-            return this.Execute<List<AccountInfo>>(request).ConvertAll(item => (IAccountInfo)item);
+            List<AccountInfo> response = this.Execute<List<AccountInfo>>(request);
+
+            return response == null ? 
+                Enumerable.Empty<IAccountInfo>().ToList() : 
+                response.ConvertAll(item => (IAccountInfo)item);
         }
 
         /// <summary>

@@ -18,5 +18,6 @@ namespace Processa.Services.Aspen.Client.Entities
         public bool Successful { get; set; }
 
         public string Warning { get; set; }
+        public string Nickname { get; set; }
     }
 }

@@ -34,10 +34,10 @@ namespace Processa.Services.Aspen.Client.Tests
             // When
             string tooLongPinNumber = TestContext.CurrentContext.Random.GetDigits(7);
             void PinNotAcceptable() => client.CurrentUser.SetPin(tooLongPinNumber, "123456");
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(PinNotAcceptable);
+            AspenException exception = Assert.Throws<AspenException>(PinNotAcceptable);
 
             // Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Pin es muy largo o muy corto"));
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Pin es muy largo o muy corto"));
         }
 
         /// <summary>
@@ -62,10 +62,10 @@ namespace Processa.Services.Aspen.Client.Tests
             const string InvalidPinNumber = "123456";
             string randomActivationCode = TestContext.CurrentContext.Random.GetDigits(6);
             void NotAcceptable() => client.CurrentUser.SetPin(InvalidPinNumber, randomActivationCode);
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(NotAcceptable);
+            AspenException exception = Assert.Throws<AspenException>(NotAcceptable);
 
             // Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Utilice caracteres que no sean consecutivos"));
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Utilice caracteres que no sean consecutivos"));
         }
 
         /// <summary>
@@ -90,10 +90,10 @@ namespace Processa.Services.Aspen.Client.Tests
             const string InvalidPinNumber = "654321";
             string randomActivationCode = TestContext.CurrentContext.Random.GetDigits(6);
             void NotAcceptable() => client.CurrentUser.SetPin(InvalidPinNumber, randomActivationCode);
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(NotAcceptable);
+            AspenException exception = Assert.Throws<AspenException>(NotAcceptable);
 
             // Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Utilice caracteres que no sean consecutivos"));
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Utilice caracteres que no sean consecutivos"));
         }
 
         /// <summary>
@@ -118,10 +118,10 @@ namespace Processa.Services.Aspen.Client.Tests
             const string InvalidPinNumber = "999999";
             string randomActivationCode = TestContext.CurrentContext.Random.GetDigits(6);
             void NotAcceptable() => client.CurrentUser.SetPin(InvalidPinNumber, randomActivationCode);
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(NotAcceptable);
+            AspenException exception = Assert.Throws<AspenException>(NotAcceptable);
 
             // Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Utilice caracteres que no sean iguales y consecutivos"));
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "Utilice caracteres que no sean iguales y consecutivos"));
         }
 
         /// <summary>
@@ -144,10 +144,10 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void NotAcceptable() => client.CurrentUser.SetPin(null, null);
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(NotAcceptable);
+            AspenException exception = Assert.Throws<AspenException>(NotAcceptable);
 
             // Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "no puede ser nulo ni vacío"));
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.NotAcceptable, "15860", "no puede ser nulo ni vacío"));
         }
 
         /// <summary>
@@ -173,11 +173,11 @@ namespace Processa.Services.Aspen.Client.Tests
             const string WellFormedPinNumber = "741269";
             string randomActivationCode = TestContext.CurrentContext.Random.GetDigits(6);
             void ExpectationFailed() => client.CurrentUser.SetPin(WellFormedPinNumber, randomActivationCode);
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(ExpectationFailed);
+            AspenException exception = Assert.Throws<AspenException>(ExpectationFailed);
 
             // Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.ExpectationFailed, "15868", "No se encontró una invitación"));
-            Assert.That(responseException.Content["remainingTimeLapse"], NUnit.Framework.Is.Null);
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.ExpectationFailed, "15868", "No se encontró una invitación"));
+            Assert.That(exception.Content["remainingTimeLapse"], NUnit.Framework.Is.Null);
         }
     }
 }

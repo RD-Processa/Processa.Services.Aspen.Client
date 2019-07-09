@@ -141,7 +141,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.ValidateSingleUseToken(invalidDocType, "52080323", "000000", accountType: "80", amount: 10000);
 
             // Tipo de documento nulo...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -150,7 +150,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -158,7 +158,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -166,7 +166,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("X"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("X"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -174,7 +174,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'X' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("XX"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -183,7 +183,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -191,7 +191,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'XXXXX' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("1"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -199,7 +199,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'1' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("10"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("10"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -208,7 +208,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("10000"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("10000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -232,8 +232,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.ValidateSingleUseToken("CC", invalidDocNumber, "000000", accountType: "80", amount: 10000);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -241,7 +241,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -249,7 +249,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -257,7 +257,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -265,7 +265,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -273,7 +273,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -281,7 +281,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Caracteres especiales...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("*123456*"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("*123456*"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -290,7 +290,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -314,42 +314,42 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.ValidateSingleUseToken("CC", "52080323", "000000", accountType: accountType, amount: 10000);
 
             // Aunque el tipo de cuenta no es obligatorio, no se acepta el vacío.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("   "));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("XX"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("8*"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("8*"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken("8000"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -357,7 +357,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
             // No requiere el tipo de cuenta y puede ser nulo.
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(null));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -365,7 +365,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Falló la redención del token. No se encontró un token con los valores proporcionados");
 
             // No requiere el tipo de cuenta y no requiere ser incluido en el body.
-            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).ValidateSingleUseTokenAvoidingValidation(
+            exception = Assert.Throws<AspenException>(() => ((AspenClient)client.Financial).ValidateSingleUseTokenAvoidingValidation(
                 "CC",
                 "52080323",
                 "000000",
@@ -395,14 +395,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.ValidateSingleUseToken("CC", "52080323", "000000", accountType: "80", amount: 10000, metadata: metadata);
 
             // Aunque el metadata no es obligatorio, no se acepta el vacío.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Metadata' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -418,7 +418,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string metadata in metadatas)
             {
-                exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseToken(metadata));
+                exception = Assert.Throws<AspenException>(() => ValidateSingleUseToken(metadata));
                 AssertAspenResponseException(
                     exception,
                     "15852",
@@ -440,7 +440,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 ((AspenClient)client.Financial).ValidateSingleUseTokenAvoidingValidation("CC", "52080323", "000000", accountType: "80", amount: amount);
 
             // Cuando se establece vacío, la serialización lo interpreta como nulo
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -448,7 +448,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' no puede ser nulo ni vacío");
 
             // Valor menor a cero...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation(-1));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -456,7 +456,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor menor a cero...
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("-1"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("-1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -464,7 +464,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Cuando no es un valor entero falla por serialización.
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -472,7 +472,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla por serialización.
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("XXX"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -480,7 +480,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla por serialización.
-            exception = Assert.Throws<AspenResponseException>(() => ValidateSingleUseTokenAvoidingValidation("10000000000000000"));
+            exception = Assert.Throws<AspenException>(() => ValidateSingleUseTokenAvoidingValidation("10000000000000000"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -511,7 +511,7 @@ namespace Processa.Services.Aspen.Client.Tests
         private void ReeemTokenWithMissmatchedMetadata(string token, int amount)
         {
             string randomMetadata = Guid.NewGuid().ToString("P");
-            var ime = Assert.Throws<AspenResponseException>(() => this.RedeemToken(token, amount, randomMetadata));
+            var ime = Assert.Throws<AspenException>(() => this.RedeemToken(token, amount, randomMetadata));
             Assert.That(ime.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             Assert.That(ime.EventId, Is.EqualTo("15875"));
             StringAssert.IsMatch("No se encontró un token con los valores proporcionados", ime.Message);
@@ -519,7 +519,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
         private void ReeemTokenWithMissmatchedAmount(string token, int amount)
         {
-            var ime = Assert.Throws<AspenResponseException>(() => this.RedeemToken(token, amount));
+            var ime = Assert.Throws<AspenException>(() => this.RedeemToken(token, amount));
             Assert.That(ime.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             Assert.That(ime.EventId, Is.EqualTo("15875"));
             StringAssert.IsMatch("El valor de la transacción no coincide con el valor del token", ime.Message);
@@ -527,7 +527,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
         private void RedeemTokenNoAmount(string token)
         {
-            var ime = Assert.Throws<AspenResponseException>(() => this.RedeemToken(token, null));
+            var ime = Assert.Throws<AspenException>(() => this.RedeemToken(token, null));
             Assert.That(ime.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
             Assert.That(ime.EventId, Is.EqualTo("15852"));
             StringAssert.IsMatch("'Amount'", ime.Message);
@@ -536,7 +536,7 @@ namespace Processa.Services.Aspen.Client.Tests
         private void RedeemTokenNegativeAmount(string token)
         {
             int randomAmount = new Random().Next(int.MinValue, -1);
-            var ime = Assert.Throws<AspenResponseException>(() => this.RedeemToken(token, randomAmount));
+            var ime = Assert.Throws<AspenException>(() => this.RedeemToken(token, randomAmount));
             Assert.That(ime.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
             Assert.That(ime.EventId, Is.EqualTo("15852"));
             StringAssert.IsMatch("'Amount'", ime.Message);
@@ -545,7 +545,7 @@ namespace Processa.Services.Aspen.Client.Tests
         private void ReeemTokenWithMissmatchedAccountType(string token, int amount)
         {
             string randomAccountType = new Random().Next(10, 80).ToString("00");
-            var ime = Assert.Throws<AspenResponseException>(() => this.RedeemToken(token, amount, accountType: randomAccountType));
+            var ime = Assert.Throws<AspenException>(() => this.RedeemToken(token, amount, accountType: randomAccountType));
             Assert.That(ime.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             Assert.That(ime.EventId, Is.EqualTo("15875"));
             StringAssert.IsMatch("Tipo de cuenta de la transacción no coincide con el tipo de cuenta del token", ime.Message);
@@ -553,7 +553,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
         private void ReeemTokenWithInvalidDocType(string token)
         {
-            var ime = Assert.Throws<AspenResponseException>(() => this.RedeemToken(token, 100, docType:"XXX"));
+            var ime = Assert.Throws<AspenException>(() => this.RedeemToken(token, 100, docType:"XXX"));
             Assert.That(ime.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
             Assert.That(ime.EventId, Is.EqualTo("15852"));
         }

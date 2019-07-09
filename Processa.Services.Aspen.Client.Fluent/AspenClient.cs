@@ -8,6 +8,7 @@
 namespace Processa.Services.Aspen.Client.Fluent
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
@@ -384,7 +385,7 @@ namespace Processa.Services.Aspen.Client.Fluent
 
             if (!response.IsSuccessful)
             {
-                throw new AspenResponseException(response);
+                throw new AspenException(response);
             }
 
             return response.Content;
@@ -397,7 +398,7 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// <param name="request">Información de la solicitud.</param>
         /// <param name="preprocess">Código a ejecutar antes de enviar la solicitud.</param>
         /// <returns>Instancia de <c>TResponse</c> con la información de respuesta del servicio Aspen.</returns>
-        /// <exception cref="AspenResponseException">Se presentó un error al procesar la solicitud. La excepción contiene los detalles del error.</exception>
+        /// <exception cref="AspenException">Se presentó un error al procesar la solicitud. La excepción contiene los detalles del error.</exception>
         private TResponse Execute<TResponse>(IRestRequest request, Func<string, string> preprocess = null)
         {
             try
@@ -418,10 +419,30 @@ namespace Processa.Services.Aspen.Client.Fluent
 
                 if (!response.IsSuccessful)
                 {
-                    throw new AspenResponseException(response);
+                    throw new AspenException(response);
+                }
+
+                Func<string> getDefaultContent = () => 
+                {
+                    bool isEnumerable = typeof(TResponse)
+                    .GetInterfaces()
+                    .Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+                    return isEnumerable ? "[]" : "{}";
+                };
+
+                if (response.StatusCode == HttpStatusCode.NoContent)
+                {
+                    return JsonConvert.DeserializeObject<TResponse>(getDefaultContent.Invoke());
                 }
 
                 string responseContent = response.Content;
+
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    return JsonConvert.DeserializeObject<TResponse>(getDefaultContent.Invoke());
+                }
+
                 if (preprocess != null)
                 {
                     responseContent = preprocess.Invoke(response.Content);
@@ -457,7 +478,7 @@ namespace Processa.Services.Aspen.Client.Fluent
 
             if (!response.IsSuccessful)
             {
-                throw new AspenResponseException(response);
+                throw new AspenException(response);
             }
         }
 

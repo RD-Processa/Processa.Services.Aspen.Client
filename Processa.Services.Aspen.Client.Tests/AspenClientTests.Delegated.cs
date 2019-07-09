@@ -69,7 +69,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(userCredentials);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("1000478"));
@@ -99,7 +99,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(delegatedUserInfo);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("97412"));
@@ -127,7 +127,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(userCredentials);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("97414"));
@@ -156,17 +156,17 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(userCredentials);
-            AspenResponseException exception = null;
+            AspenException exception = null;
             for (int index = 1; index <= maxFailedPasswordAttempt - 1; index++)
             {
-                exception = Assert.Throws<AspenResponseException>(AuthFails);
+                exception = Assert.Throws<AspenException>(AuthFails);
                 Assert.That(exception.EventId, Is.EqualTo("97414"));
                 Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
                 Assert.That(exception.Message, Is.Not.Null.And.Matches("Combinación de usuario y contraseña invalida. Por favor revise los valores ingresados e intente de nuevo"));
             }
 
             // Then
-            exception = Assert.Throws<AspenResponseException>(AuthFails);
+            exception = Assert.Throws<AspenException>(AuthFails);
             Assert.That(exception.EventId, Is.EqualTo("97415"));
             Assert.That(exception.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
             Assert.That(exception.Message, Is.Not.Null.And.Matches("Usuario ha sido bloqueado por superar el número máximo de intentos de sesión inválidos"));
@@ -191,7 +191,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(userCredentials);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("97413"));
@@ -218,7 +218,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(delegatedUserInfo);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("97416"));
@@ -245,7 +245,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(delegatedUserInfo);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("97417"));
@@ -282,7 +282,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 // When
                 DelegatedUserInfo userCredentials = GetDelegatedUserCredentials();
                 void AuthFails() => client.Authenticate(userCredentials);
-                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+                AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
                 // Then
                 Assert.That(exception.EventId, Is.EqualTo("15852"));
@@ -314,7 +314,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate(userCredentials);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("15852"));
@@ -340,7 +340,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // When
             void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
             // Then
             Assert.That(exception.EventId, Is.EqualTo("15852"));
@@ -382,7 +382,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
                 // When
                 void AuthFails() => client.Authenticate(userCredentials);
-                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+                AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
                 // Then
                 Assert.That(exception.EventId, Is.EqualTo("15852"));
@@ -429,7 +429,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
                 // When
                 void AuthFails() => client.Authenticate(userCredentials);
-                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+                AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
                 // Then
                 Assert.That(exception.EventId, Is.EqualTo("15852"));
@@ -474,7 +474,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
                 // When
                 void AuthFails() => client.Authenticate(userCredentials);
-                AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+                AspenException exception = Assert.Throws<AspenException>(AuthFails);
 
                 // Then
                 Assert.That(exception.EventId, Is.EqualTo("15852"));
@@ -554,7 +554,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración para establecer en falso el envío de códigos de activación.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:SendActivationCode' -Value 'false'
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20099",
@@ -574,7 +574,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración para remover el identificador de la campaña.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'GuessWho:CampaignGuid'
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20099",
@@ -594,7 +594,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración para establecer en nula o vacía, la propiedad del identificador de la campaña.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:CampaignGuid' -Value $null
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20099",
@@ -614,7 +614,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración para remover el identificador del canal.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Remove-AppSetting -Key 'GuessWho:ChannelGuid'
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20099",
@@ -634,7 +634,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración para establecer en nula o vacía, la propiedad del identificador de la campaña.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:ChannelGuid' -Value $null
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20099",
@@ -654,7 +654,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración para la plantilla del mensaje.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'GuessWho:ActivationCodeMessageTemplate' -Value '   '
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20099",
@@ -674,7 +674,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración de KRAKEN para usar una cola que no existe y así imitar un timeout.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Kraken:SendMessageRoutingKey' -Value 'Kraken.NotificationRoutingKey.NotFound'
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20100",
@@ -694,7 +694,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // NOTA: Debe cambiar la configuración de KRAKEN para usar una cola que no existe y así imitar un timeout.
             // Use el comando de Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Kraken:SendMessageRoutingKey' -Value 'Kraken.NotificationRoutingKey.NotFound'
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.RequestActivationCode());
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.RequestActivationCode());
             AssertAspenResponseException(
                 exception,
                 "20102",
@@ -733,7 +733,7 @@ namespace Processa.Services.Aspen.Client.Tests
             const string WellFormedPinNumber = "741269";
             string randomCode = TestContext.CurrentContext.Random.GetDigits(6);
             void BadRequest() => client.CurrentUser.SetPin(WellFormedPinNumber, randomCode);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(BadRequest);
+            AspenException exception = Assert.Throws<AspenException>(BadRequest);
 
             // Then
             const string ResponseText = "Código de activación o identificador es invalido";
@@ -837,28 +837,28 @@ namespace Processa.Services.Aspen.Client.Tests
             void GetSingleUseTokenAvoidingValidation(string pinNumber) =>
                 ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation(pinNumber);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'PinNumber' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'PinNumber' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'PinNumber' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken("áéíóú"));
+            exception = Assert.Throws<AspenException>(() => client.Financial.GetSingleUseToken("áéíóú"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -866,14 +866,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'PinNumber' debe coincidir con el patrón ^[ -~]{1,10}$");
 
             string randomPinNumber = Guid.NewGuid().ToString("N").Substring(0, 12);
-            exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken(randomPinNumber));
+            exception = Assert.Throws<AspenException>(() => client.Financial.GetSingleUseToken(randomPinNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'PinNumber' debe coincidir con el patrón ^[ -~]{1,10}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken(randomPinNumber, "áéíóú"));
+            exception = Assert.Throws<AspenException>(() => client.Financial.GetSingleUseToken(randomPinNumber, "áéíóú"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -904,7 +904,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string randomPinNumber in randomPinNumbers)
             {
-                AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.GetSingleUseToken(randomPinNumber));
+                AspenException exception = Assert.Throws<AspenException>(() => client.Financial.GetSingleUseToken(randomPinNumber));
                 AssertAspenResponseException(
                     exception,
                     "15862",
@@ -930,42 +930,42 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.GetSingleUseToken("141414", accountType: accountType);
 
             // Aunque el tipo de cuenta no es obligatorio, no se acepta el vacío.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("XX"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("8*"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken("8*"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken("8000"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -990,7 +990,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.GetSingleUseToken("141414", channelKey: channelKey);
 
             // Aunque el canal no es obligatorio, no se acepta vacío.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -998,7 +998,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'ChannelKey' no puede ser vacío");
 
             // Aunque el canal no es obligatorio, no se acepta solo espacios en blanco.
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1006,7 +1006,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'ChannelKey' no puede ser vacío");
 
             string invalidChannelKey = "Y";
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
             AssertAspenResponseException(
                 exception,
                 "15858",
@@ -1014,7 +1014,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
             invalidChannelKey = "XX";
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
             AssertAspenResponseException(
                 exception,
                 "15858",
@@ -1022,7 +1022,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
             invalidChannelKey = "XXXX";
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
             AssertAspenResponseException(
                 exception,
                 "15858",
@@ -1030,7 +1030,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
             invalidChannelKey = new Random().Next(99, 99999).ToString();
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
             AssertAspenResponseException(
                 exception,
                 "15858",
@@ -1038,7 +1038,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
             invalidChannelKey = "****";
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
             AssertAspenResponseException(
                 exception,
                 "15858",
@@ -1046,7 +1046,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
             invalidChannelKey = Guid.NewGuid().ToString();
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
             AssertAspenResponseException(
                 exception,
                 "15858",
@@ -1060,7 +1060,7 @@ namespace Processa.Services.Aspen.Client.Tests
             foreach (ChannelInfo channel in channels)
             {
                 invalidChannelKey = channel.Key.ToLower();
-                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+                exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
                 AssertAspenResponseException(
                     exception,
                     "15858",
@@ -1068,7 +1068,7 @@ namespace Processa.Services.Aspen.Client.Tests
                     $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
                 invalidChannelKey = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(channel.Key.ToLower());
-                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+                exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
                 AssertAspenResponseException(
                     exception,
                     "15858",
@@ -1076,7 +1076,7 @@ namespace Processa.Services.Aspen.Client.Tests
                     $"No existe un canal con el código proporcionado '{invalidChannelKey}'");
 
                 invalidChannelKey = $" {channel.Key} ";
-                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(invalidChannelKey));
+                exception = Assert.Throws<AspenException>(() => GetSingleUseToken(invalidChannelKey));
                 AssertAspenResponseException(
                     exception,
                     "15858",
@@ -1102,14 +1102,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.GetSingleUseToken("141414", metadata: metadata);
 
             // Aunque el metadata no es obligatorio, no se acepta el vacío.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Metadata' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1125,7 +1125,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string metadata in metadatas)
             {
-                exception = Assert.Throws<AspenResponseException>(() => GetSingleUseToken(metadata));
+                exception = Assert.Throws<AspenException>(() => GetSingleUseToken(metadata));
                 AssertAspenResponseException(
                     exception,
                     "15852",
@@ -1148,7 +1148,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 ((AspenClient)client.Financial).GetSingleUseTokenAvoidingValidation("141414", amount: amount);
 
             // Valor menor a cero...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation(-1));
+            AspenException exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1156,7 +1156,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor menor a cero...
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("-1"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("-1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1164,7 +1164,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Cuando no es un valor entero falla por serialización.
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -1172,7 +1172,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla por serialización.
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("XXX"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -1180,7 +1180,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla por serialización.
-            exception = Assert.Throws<AspenResponseException>(() => GetSingleUseTokenAvoidingValidation("10000000000000000"));
+            exception = Assert.Throws<AspenException>(() => GetSingleUseTokenAvoidingValidation("10000000000000000"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -1326,7 +1326,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             ITransferAccountRequestInfo account = new TransferAccountRequestRequestInfo("CC", "79483129", "Atorres", "6039590286132628");
             account.PinNumber = new Random().Next(0, 999999).ToString("000000");
-            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(account));
+            AspenException exc = Assert.Throws<AspenException>(() => client.Management.LinkTransferAccount(account));
             Assert.That(exc.EventId, Is.EqualTo("15862"));
             StringAssert.IsMatch("Pin de usuario/app no es valido", exc.Message);
         }
@@ -1348,8 +1348,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Management.UnlinkTransferAccount(info.Alias);
             }
 
-            var alias = $"Alias {new Random().Next(1, 999):000}";
-            ITransferAccountRequestInfo account = new TransferAccountRequestRequestInfo("CC", "79483129", alias, "6039590286132628");
+            var alias = $"Alias {new Random().Next(1, 999):000}##";
+            ITransferAccountRequestInfo account = new TransferAccountRequestRequestInfo("CC", "35512889", alias, "6039599272117600");
             account.PinNumber = "141414";
             Assert.DoesNotThrow(() => client.Management.LinkTransferAccount(account));
         }
@@ -1575,7 +1575,7 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.DoesNotThrow(() => client.CurrentUser.UpdatePin("141414", "151515"));
 
             // Pin anterior ya no es valido para intentar actualizar.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.CurrentUser.UpdatePin("141414", "161616"));
+            AspenException exception = Assert.Throws<AspenException>(() => client.CurrentUser.UpdatePin("141414", "161616"));
             AssertAspenResponseException(
                 exception,
                 "15861",

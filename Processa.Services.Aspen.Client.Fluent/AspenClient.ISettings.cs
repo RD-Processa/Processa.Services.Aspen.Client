@@ -113,7 +113,7 @@ namespace Processa.Services.Aspen.Client.Fluent
 
             if (!response.IsSuccessful)
             {
-                throw new AspenResponseException(response);
+                throw new AspenException(response);
             }
 
             return response.Data;

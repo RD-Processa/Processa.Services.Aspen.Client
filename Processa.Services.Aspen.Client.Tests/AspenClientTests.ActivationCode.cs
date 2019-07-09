@@ -80,11 +80,11 @@ namespace Processa.Services.Aspen.Client.Tests
                 appClient.Management.ValidateActivationCode(randomCode, randomNickname);
 
             }
-            catch (AspenResponseException exception) when (exception.EventId == "20100")
+            catch (AspenException exception) when (exception.EventId == "20100")
             {
                 Assert.That(exception, Is.ExpectedException(HttpStatusCode.ServiceUnavailable,  message: "No fue posible enviar el mensaje"));
             }
-            catch (AspenResponseException exception) when (exception.EventId == "15868")
+            catch (AspenException exception) when (exception.EventId == "15868")
             {
                 Assert.That(exception, Is.ExpectedException(HttpStatusCode.ExpectationFailed, message: "Código de activación o identificador es invalido"));
                 Assert.That(exception.Content["currentAttempt"], NUnit.Framework.Is.GreaterThan(0));
@@ -107,7 +107,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                                   .GetClient();
 
             ServiceController sc = new ServiceController("Processa.Services.Aspen.Host.Dev");
-            sc.ExecuteCommand(129);
+            //sc.ExecuteCommand(129);
 
             // When
 
@@ -120,11 +120,17 @@ namespace Processa.Services.Aspen.Client.Tests
             try
             {
                 var activationCode = userClient.CurrentUser.RequestActivationCode(randomNickname);
+                PrintOutput("Code", activationCode);
                 Assert.That(activationCode.Code, NUnit.Framework.Is.Not.Null);
                 Assert.That(activationCode.Successful, NUnit.Framework.Is.EqualTo(true));
                 Assert.That(activationCode.TimeLapseMinutes, NUnit.Framework.Is.GreaterThanOrEqualTo(0));
+                Assert.That(activationCode.Nickname, NUnit.Framework.Is.EqualTo(randomNickname));
+
+                string pinNumber = "161616";
+                Assert.DoesNotThrow(() => userClient.CurrentUser.SetPin(pinNumber, activationCode.Code, randomNickname));
+
             }
-            catch (AspenResponseException exception)
+            catch (AspenException exception)
             {
                 Assert.That(exception, Is.ExpectedException(HttpStatusCode.ServiceUnavailable, "20100", "No fue posible enviar el mensaje"));
             }
@@ -157,12 +163,12 @@ namespace Processa.Services.Aspen.Client.Tests
             }
 
             void RequestCodeFailed() =>  userClient.CurrentUser.RequestActivationCode(randomNickname);
-            AspenResponseException responseException = Assert.Throws<AspenResponseException>(RequestCodeFailed);
+            AspenException exception = Assert.Throws<AspenException>(RequestCodeFailed);
 
             //Then
-            Assert.That(responseException, Is.ExpectedException(HttpStatusCode.ExpectationFailed, "15870", "Solicitud de código de activación inválida"));
-            Assert.That(responseException.Content["attempt"], NUnit.Framework.Is.EqualTo(policyAttempts));
-            Assert.That(responseException.Content["remainingTimeLapse"], NUnit.Framework.Is.GreaterThan(0));
+            Assert.That(exception, Is.ExpectedException(HttpStatusCode.ExpectationFailed, "15870", "Solicitud de código de activación inválida"));
+            Assert.That(exception.Content["attempt"], NUnit.Framework.Is.EqualTo(policyAttempts));
+            Assert.That(exception.Content["remainingTimeLapse"], NUnit.Framework.Is.GreaterThan(0));
         }
 
         [Test, ActivationCode, Author("Atorres")]
@@ -175,9 +181,9 @@ namespace Processa.Services.Aspen.Client.Tests
                                                   .Authenticate(userCredentials)
                                                   .GetClient();
 
-            string randomNickname = TestContext.CurrentContext.Random.GetString(10);
+            string randomPinNumber = TestContext.CurrentContext.Random.GetDigits(6);
             var response = userClient.CurrentUser.RequestActivationCode();
-            userClient.CurrentUser.SetPin("178965", response.Code);
+            userClient.CurrentUser.SetPin(randomPinNumber, response.Code);
         }
 
     }

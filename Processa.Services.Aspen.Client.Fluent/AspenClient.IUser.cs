@@ -29,10 +29,10 @@ namespace Processa.Services.Aspen.Client.Fluent
         /// </summary>
         /// <param name="pinNumber">Número de pin que se debe asignar al usuario actual.</param>
         /// <param name="activationCode">Código de activación (SMS) recibido por el usuario.</param>
-        public void SetPin(string pinNumber, string activationCode)
+        public void SetPin(string pinNumber, string activationCode, string nickname = null)
         {
             IRestRequest request = new AspenRequest(this, Routes.Users.Pin, Method.POST);
-            request.AddJsonBody(new { PinNumber = pinNumber, ActivationCode = activationCode });
+            request.AddJsonBody(new { PinNumber = pinNumber, ActivationCode = activationCode, Nickname = nickname, EnrollmentAlias = nickname });
             this.Execute(request);
         }
 

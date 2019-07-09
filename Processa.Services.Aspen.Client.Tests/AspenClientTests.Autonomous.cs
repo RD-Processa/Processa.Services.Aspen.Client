@@ -17,7 +17,6 @@ namespace Processa.Services.Aspen.Client.Tests
     using System.Net;
     using Entities;
     using Fluent;
-    using Newtonsoft.Json;
     using NUnit.Framework;
 
     /// <summary>
@@ -41,7 +40,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Forgot to Invoke method Authenticate()
             void NoneAuthenticatedClient() => client.Settings.GetDocTypes();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(NoneAuthenticatedClient);
+            AspenException exception = Assert.Throws<AspenException>(NoneAuthenticatedClient);
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -60,7 +59,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .WithIdentity(this.autonomousAppInfoProvider);
 
             void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
             AssertAspenResponseException(
                 exception,
                 "15842",
@@ -88,7 +87,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .GetClient();
 
             void DummyCall1() => client.Financial.RequestSingleUseToken("CC", "52080323");
-            AspenResponseException are1 = Assert.Throws<AspenResponseException>(DummyCall1);
+            AspenException are1 = Assert.Throws<AspenException>(DummyCall1);
             AssertAspenResponseException(
                 are1,
                 "99003",
@@ -102,7 +101,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .GetClient();
 
             void DummyCall2() => client.Financial.RequestSingleUseToken("CC", "52080323");
-            AspenResponseException are2 = Assert.Throws<AspenResponseException>(DummyCall2);
+            AspenException are2 = Assert.Throws<AspenException>(DummyCall2);
             AssertAspenResponseException(
                 are2,
                 "15851",
@@ -115,8 +114,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 .RoutingTo(this.autonomousAppInfoProvider)
                 .WithIdentity(apiKey, apiSecret);
 
-            AspenResponseException are3 =
-                Assert.Throws<AspenResponseException>(() => client.Authenticate(useCache: false));
+            AspenException are3 =
+                Assert.Throws<AspenException>(() => client.Authenticate(useCache: false));
             AssertAspenResponseException(
                 are3,
                 "20007",
@@ -135,7 +134,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .WithIdentity(this.autonomousAppInfoProvider);
 
             void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
             AssertAspenResponseException(
                 exception,
                 "15845",
@@ -155,7 +154,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .WithIdentity(randomApiKey, this.autonomousAppInfoProvider.ApiSecret);
 
             void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
             AssertAspenResponseException(
                 exception,
                 "20005",
@@ -175,7 +174,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .WithIdentity(this.autonomousAppInfoProvider.ApiKey, randomApiSecret);
 
             void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
             AssertAspenResponseException(
                 exception,
                 "20007",
@@ -328,7 +327,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .WithIdentity(this.autonomousAppInfoProvider);
 
             void AuthFails() => client.Authenticate();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(AuthFails);
+            AspenException exception = Assert.Throws<AspenException>(AuthFails);
             AssertAspenResponseException(
                 exception,
                 "1000478",
@@ -351,7 +350,7 @@ namespace Processa.Services.Aspen.Client.Tests
             string randomCode = TestContext.CurrentContext.Random.GetDigits(6);
             string randomNickname = $"CC|{randomCode}";
             void ValidationFailed() => client.Management.ValidateActivationCode(randomCode, randomNickname);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(ValidationFailed);
+            AspenException exception = Assert.Throws<AspenException>(ValidationFailed);
             AssertAspenResponseException(
                 exception,
                 "15868",
@@ -396,48 +395,6 @@ namespace Processa.Services.Aspen.Client.Tests
                     channelId: "94ED400D-5D26-4160-A3AA-EC45A2B4AD39");
 
             Assert.DoesNotThrow(ValidationWorks);
-        }
-
-        /// <summary>
-        /// Se permite consultar las cuentas de un usuario desde una aplicación autónoma.
-        /// </summary>
-        /// <remarks>A esta prueba como se conecta a varios sistema, se le permite un poco más de tiempo de ejecución.</remarks>
-        [Test,
-         Category("Autonomous-Scope"),
-         Description("https://github.com/RD-Processa/Processa.Services.Aspen.Client/issues/7"),
-         Author("Atorres"),
-         MaxTime(3000)]
-        public void Issue7Autonomous()
-        {
-            // Given
-            RecognizedUserInfo userInfo = RecognizedUserInfo.Current();
-            IFluentClient client = AspenClient.Initialize()
-                .RoutingTo(this.autonomousAppInfoProvider)
-                .WithIdentity(this.autonomousAppInfoProvider)
-                .Authenticate()
-                .GetClient();
-
-            // When            
-            var accounts = client.Financial.GetAccounts(userInfo.DocType, userInfo.DocNumber);
-            PrintOutput("Accounts", accounts);
-
-            // Then
-            CollectionAssert.IsNotEmpty(accounts);
-        }
-
-        [Test]
-        public void GetBalancesAutonomous()
-        {
-            RecognizedUserInfo userInfo = RecognizedUserInfo.Current();
-            IFluentClient client = AspenClient.Initialize()
-                .RoutingTo(this.autonomousAppInfoProvider)
-                .WithIdentity(this.autonomousAppInfoProvider)
-                .Authenticate()
-                .GetClient();
-
-            var balances = client.Financial.GetBalances(userInfo.DocType, userInfo.DocNumber, userInfo.AccountId);
-            Console.WriteLine(JsonConvert.SerializeObject(balances, Formatting.Indented));
-            CollectionAssert.IsNotEmpty(balances);
         }
 
         [Test]
@@ -535,8 +492,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RequestSingleUseToken(invalidDocType, "52080323", tags: tags);
 
             // Tipo de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseTokenAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRequestSingleUseTokenAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -544,7 +501,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -553,7 +510,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseTokenAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
@@ -562,7 +519,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -571,7 +528,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("C"));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken("C"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -579,7 +536,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'C' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("ZZZZZZ"));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken("ZZZZZZ"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -607,8 +564,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RequestSingleUseToken("CC", invalidDocNumber, tags: tags);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseTokenAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRequestSingleUseTokenAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -616,7 +573,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseTokenAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -625,7 +582,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseTokenAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
@@ -634,7 +591,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -642,7 +599,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -650,7 +607,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -659,7 +616,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -682,7 +639,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RequestSingleUseToken("CC", "52080323", invalidMetadata, tags: tags);
 
             // Metadata vacío...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -690,7 +647,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Metadata' no puede ser vacío");
 
             // Metadata vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken("   "));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -703,7 +660,7 @@ namespace Processa.Services.Aspen.Client.Tests
             foreach (string value in emphasis)
             {
                 string metadata = $"LowercaseLetter-{value}";
-                exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(metadata));
+                exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken(metadata));
                 AssertAspenResponseException(
                     exception,
                     "15852",
@@ -711,7 +668,7 @@ namespace Processa.Services.Aspen.Client.Tests
                     @"'Metadata' debe coincidir con el patrón ^[ -~]{1,50}$");
 
                 metadata = $"UppercaseLetter-{value.ToUpper()}";
-                exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(metadata));
+                exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken(metadata));
                 AssertAspenResponseException(
                     exception,
                     "15852",
@@ -721,7 +678,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Excede longitud...
             string randomMetadata = $"{Guid.NewGuid()}-{Guid.NewGuid()}-{Guid.NewGuid()}";
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRequestSingleUseToken(randomMetadata));
+            exception = Assert.Throws<AspenException>(() => InvokeRequestSingleUseToken(randomMetadata));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -742,7 +699,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RequestSingleUseToken("CC", "52080323", tags: tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() =>
+            AspenException exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
@@ -751,7 +708,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
@@ -759,7 +716,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
@@ -767,7 +724,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -775,7 +732,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
@@ -783,7 +740,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(
+            exception = Assert.Throws<AspenException>(
                 () => InvokeRequestSingleUseToken(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
@@ -791,7 +748,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -799,7 +756,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
@@ -807,7 +764,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRequestSingleUseToken(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
@@ -855,8 +812,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 .Authenticate()
                 .GetClient();
 
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => client.Financial.RequestSingleUseToken("CC", "0000000000"));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => client.Financial.RequestSingleUseToken("CC", "0000000000"));
             AssertAspenResponseException(
                 exception,
                 "20102",
@@ -890,8 +847,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Payment(invalidDocType, "52080323", "585730", "80", 10000);
 
             // Tipo de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -899,7 +856,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no incluido en el body...
-            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
+            exception = Assert.Throws<AspenException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
                 null,
                 "52080323",
                 "585730",
@@ -913,7 +870,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -921,7 +878,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -929,7 +886,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("X"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("X"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -937,7 +894,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'X' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -946,7 +903,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -954,7 +911,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'XXXXX' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("1"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -962,7 +919,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'1' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("10"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("10"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -971,7 +928,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("10000"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("10000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -996,8 +953,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Payment("CC", invalidDocNumber, "585730", "80", 10000);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1005,7 +962,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento no agregado al body...
-            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
+            exception = Assert.Throws<AspenException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
                     "CC", 
                     null,
                     "585730",
@@ -1019,7 +976,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1027,7 +984,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1035,7 +992,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1043,7 +1000,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1051,7 +1008,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1059,7 +1016,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Caracteres especiales...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("*123456*"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("*123456*"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1068,7 +1025,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1092,42 +1049,42 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Payment("CC", "52080323", "000000", accountType, 10000);
 
             // Aunque el tipo de cuenta no es obligatorio, no se acepta el vacío.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("   "));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("   "));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' no puede ser vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("8*"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("8*"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("8000"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1135,7 +1092,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
             // No requiere el tipo de cuenta y puede ser nulo.
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1143,7 +1100,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Falló la redención del token. No se encontró un token con los valores proporcionados");
 
             // No requiere el tipo de cuenta y no requiere ser incluido en el body.
-            exception = Assert.Throws<AspenResponseException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
+            exception = Assert.Throws<AspenException>(() => ((AspenClient)client.Financial).PaymentAvoidingValidation(
                 "CC", 
                 "52080323", 
                 "000000", 
@@ -1173,8 +1130,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Payment("CC", "52080323", invalidToken, "80", 10000);
 
             // Token nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1182,7 +1139,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' no puede ser nulo ni vacío");
 
             // Token vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1190,7 +1147,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' no puede ser nulo ni vacío");
 
             // Token espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1198,7 +1155,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' no puede ser nulo ni vacío");
 
             // Token solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("XXXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("XXXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1206,7 +1163,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' debe coincidir con el patrón ^\d{1,9}$");
 
             // Token letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokePayment("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1214,7 +1171,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' debe coincidir con el patrón ^\d{1,9}$");
 
             // Token números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1223,7 +1180,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Token excede longitud...
             string randomToken = new Random().Next().ToString("0000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomToken));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(randomToken));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1232,7 +1189,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Token de 6 dígitos debe fallar...
             randomToken = new Random().Next(100000, 999999).ToString();
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomToken));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(randomToken));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1241,7 +1198,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Token de 9 dígitos debe fallar...
             randomToken = new Random().Next(100000000, 999999999).ToString();
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(randomToken));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(randomToken));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1262,8 +1219,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Payment("CC", "52080323", "000000", "80", 10000, tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(terminalId: terminalId)));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1271,7 +1228,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePayment(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
@@ -1279,49 +1236,49 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(customerGroup: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(customerGroup: "ZZZZ")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(customerGroup: "800")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "ZZZZZZZZ")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "000")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePayment(new TagsInfo(pan: "00000")));
+            exception = Assert.Throws<AspenException>(() => InvokePayment(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1330,7 +1287,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Cuando la propiedad Tags en el body es nula...
             void InvokePaymentWithoutTags() => client.Financial.Payment("CC", "52080323", "000000", "80", 10000);
-            exception = Assert.Throws<AspenResponseException>(InvokePaymentWithoutTags);
+            exception = Assert.Throws<AspenException>(InvokePaymentWithoutTags);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1342,7 +1299,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 ((AspenClient) client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", "80", 10000,
                     null, excludeTags: true);
 
-            exception = Assert.Throws<AspenResponseException>(InvokePaymentExcludeTagsFromBody);
+            exception = Assert.Throws<AspenException>(InvokePaymentExcludeTagsFromBody);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1364,8 +1321,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     invalidAmount);
 
             // Valor menor a cero...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(-1));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1373,7 +1330,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor menor a cero...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentAvoidingValidation(0));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentAvoidingValidation(0));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1385,7 +1342,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 ((AspenClient) client.Financial).PaymentAvoidingValidation("CC", "52080323", "000000", "80", null, null,
                     excludeAmount: true);
 
-            exception = Assert.Throws<AspenResponseException>(InvokePaymentWithoutAmount);
+            exception = Assert.Throws<AspenException>(InvokePaymentWithoutAmount);
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1397,7 +1354,7 @@ namespace Processa.Services.Aspen.Client.Tests
                     invalidAmount);
 
             // Cuando el valor es un entero de tipo cadena...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("0"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentNotIntAmount("0"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1405,7 +1362,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Cuando el valor es nulo, eso equivalente a cero (ya que es el valor predeterminado de un entero)...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount(null));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentNotIntAmount(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1413,7 +1370,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentNotIntAmount(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -1421,7 +1378,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("   "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentNotIntAmount("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -1429,7 +1386,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("XXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentNotIntAmount("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -1437,7 +1394,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando el valor es un entero de tipo cadena debe ser exitosa la validación del campo...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentNotIntAmount("10000"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentNotIntAmount("10000"));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1446,7 +1403,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Cuando el valor es un entero pero no existe token...
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "000000", "80", 10000);
-            exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1489,7 +1446,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // Use Aspen.Autonomous: Send-TranToken -DocNumber '52080323' -DocType 'CC'
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "306264", "80", 10000);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "87000",
@@ -1517,7 +1474,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "428096", "80", int.MaxValue);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1540,7 +1497,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "916678", "80", int.MaxValue);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1563,7 +1520,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "211124", "80", 9999);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1586,7 +1543,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "330570", "81", 10000);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -1611,7 +1568,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokePayment() => client.Financial.Payment("CC", "52080323", "195276", "81", 10000);
 
             // La intención es que el supere la validación del token, no importa si la transacción no es autorizada.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "87000",
@@ -1714,7 +1671,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 1. Esta prueba es manual y su intención es verificar la respuesta, por lo que se debe cambiar algo en el controlador para que genere excepción no controlada.
             void InvokePayment() => client.Financial.Payment("CC", "1073688252", "774368", "80", 10000);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePayment);
+            AspenException exception = Assert.Throws<AspenException>(InvokePayment);
             AssertAspenResponseException(
                 exception,
                 "87001",
@@ -1745,8 +1702,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.PaymentReversal(invalidTransactionId, "CC", "52080323", "80", 10000, tags);
 
             // Identificador de transacción nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1754,7 +1711,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TransactionId' no puede ser nulo ni vacío");
 
             // Identificador de transacción vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -1763,7 +1720,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TransactionId' no puede ser nulo ni vacío");
 
             // Identificador de transacción espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1772,7 +1729,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Identificador de transacción con algún caracter inválido...
             string randomTransactionId = $"{Guid.Empty}-{Guid.Empty}-ñÑ+++";
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(randomTransactionId));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(randomTransactionId));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1781,7 +1738,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Identificador de transacción excede longitud...
             randomTransactionId = $"{Guid.Empty}-{Guid.Empty}-{Guid.Empty}";
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(randomTransactionId));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(randomTransactionId));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1809,8 +1766,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     tags);
 
             // Tipo de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1818,7 +1775,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -1827,7 +1784,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1835,7 +1792,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1844,7 +1801,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("C"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("C"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1852,7 +1809,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'C' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("ZZZZZZ"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("ZZZZZZ"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1879,8 +1836,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.PaymentReversal(Guid.NewGuid().ToString(), "CC", invalidDocNumber, "80", 10000, tags);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1888,7 +1845,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -1897,7 +1854,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1905,7 +1862,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1913,7 +1870,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1921,7 +1878,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1930,7 +1887,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1958,8 +1915,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     tags);
 
             // Tipo de cuenta nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1967,7 +1924,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -1976,7 +1933,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1984,7 +1941,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta formato
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -1992,7 +1949,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
             // Tipo de cuenta longitud
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal("8000"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2013,8 +1970,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.PaymentReversal(Guid.NewGuid().ToString(), "CC", "52080323", "80", 10000, tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() =>
+            AspenException exception =
+                Assert.Throws<AspenException>(() =>
                     InvokePaymentReversal(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
@@ -2023,7 +1980,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversal(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
@@ -2031,7 +1988,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversal(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
@@ -2039,7 +1996,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversal(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -2047,7 +2004,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversal(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
@@ -2055,14 +2012,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(new TagsInfo(pan: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(
+            exception = Assert.Throws<AspenException>(
                 () => InvokePaymentReversal(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -2070,14 +2027,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(new TagsInfo(pan: "000")));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversal(new TagsInfo(pan: "00000")));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversal(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2105,8 +2062,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     tags);
 
             // Valor menor a cero...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(-1));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2114,7 +2071,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor igual a cero...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(0));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(0));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -2122,7 +2079,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Sin valor
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation(null));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -2130,7 +2087,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokePaymentReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -2139,7 +2096,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -2147,7 +2104,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("XXX"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -2155,14 +2112,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando el valor es un entero de tipo cadena...
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("-1"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("-1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Amount' debe ser mayor que cero");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokePaymentReversalAvoidingValidation("0"));
+            exception = Assert.Throws<AspenException>(() => InvokePaymentReversalAvoidingValidation("0"));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -2194,7 +2151,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             TagsInfo tags = new TagsInfo(cardAcceptorId: "00000014436950");
             string randomTransactionId = Guid.NewGuid().ToString("D");
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.PaymentReversal(randomTransactionId, "CC", "1073688252", "80", 10000, tags));
+            AspenException exception = Assert.Throws<AspenException>(() => client.Financial.PaymentReversal(randomTransactionId, "CC", "1073688252", "80", 10000, tags));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -2222,7 +2179,7 @@ namespace Processa.Services.Aspen.Client.Tests
             TagsInfo tags = new TagsInfo(cardAcceptorId: "00000014436950");
             void InvokePaymentReversal() => client.Financial.PaymentReversal(Guid.NewGuid().ToString(), "CC", "1073688252", "80", 10000, tags);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePaymentReversal);
+            AspenException exception = Assert.Throws<AspenException>(InvokePaymentReversal);
             AssertAspenResponseException(
                 exception,
                 "87002",
@@ -2244,7 +2201,7 @@ namespace Processa.Services.Aspen.Client.Tests
             TagsInfo tags = new TagsInfo(cardAcceptorId: "00000014436950");
             void InvokePaymentReversal() => client.Financial.PaymentReversal(Guid.NewGuid().ToString(), "CC", "1073688252", "80", 10000, tags);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokePaymentReversal);
+            AspenException exception = Assert.Throws<AspenException>(InvokePaymentReversal);
             AssertAspenResponseException(
                 exception,
                 "87001",
@@ -2269,7 +2226,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawal(string invalidDocType) => client.Financial.Withdrawal(invalidDocType, "52080323", "585730", "80", 10000);
 
             // Tipo de documento nulo...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2277,7 +2234,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2285,7 +2242,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2293,7 +2250,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2302,7 +2259,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("C"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("C"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2310,7 +2267,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'C' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("ZZZZZZ"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("ZZZZZZ"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2331,7 +2288,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawal(string invalidDocNumber) => client.Financial.Withdrawal("CC", invalidDocNumber, "585730", "80", 10000);
 
             // Número de documento nulo...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2339,7 +2296,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2347,7 +2304,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2355,7 +2312,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2363,7 +2320,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2371,7 +2328,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2380,7 +2337,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2399,14 +2356,14 @@ namespace Processa.Services.Aspen.Client.Tests
 
             void InvokeWithdrawal(string invalidAccountType) => client.Financial.Withdrawal("CC", "52080323", "000000", invalidAccountType, 10000);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("XX"));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("8000"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2415,7 +2372,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // No requiere el tipo de cuenta y por defecto se usará el tipo de cuenta configurada.
             void InvokeWithdrawalWithoutAccountType() => ((AspenClient)client.Financial).WithdrawalAvoidingValidation("CC", "52080323", "000000", null, 10000, null, excludeAccountType: true, excludeTags: true);
-            exception = Assert.Throws<AspenResponseException>(InvokeWithdrawalWithoutAccountType);
+            exception = Assert.Throws<AspenException>(InvokeWithdrawalWithoutAccountType);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2436,7 +2393,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawal(string invalidToken) => client.Financial.Withdrawal("CC", "52080323", invalidToken, "80", 10000);
 
             // Token nulo...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2444,7 +2401,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' no puede ser nulo ni vacío");
 
             // Token vacío...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2452,7 +2409,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' no puede ser nulo ni vacío");
 
             // Token espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2460,7 +2417,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' no puede ser nulo ni vacío");
 
             // Token solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("XXXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("XXXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2468,7 +2425,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' debe coincidir con el patrón ^\d{1,9}$");
 
             // Token letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2476,7 +2433,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Token' debe coincidir con el patrón ^\d{1,9}$");
 
             // Token números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2485,7 +2442,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Token excede longitud...
             string randomToken = new Random().Next().ToString("0000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(randomToken));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(randomToken));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2494,7 +2451,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Token de 6 dígitos debe fallar...
             randomToken = new Random().Next(100000, 999999).ToString();
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(randomToken));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(randomToken));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2503,7 +2460,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Token de 9 dígitos debe fallar...
             randomToken = new Random().Next(100000000, 999999999).ToString();
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(randomToken));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(randomToken));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2523,7 +2480,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawal(TagsInfo tagsInfo) => client.Financial.Withdrawal("CC", "52080323", "000000", "80", 10000, tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(terminalId: terminalId)));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2531,56 +2488,56 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(cardAcceptorId: cardAcceptorId)));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(customerGroup: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(customerGroup: "ZZZZ")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(customerGroup: "800")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(pan: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(pan: "ZZZZZZZZ")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(pan: "000")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawal(new TagsInfo(pan: "00000")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawal(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2589,7 +2546,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Cuando la propiedad Tags en el body es nula...
             void InvokeWithdrawalWithoutTags() => client.Financial.Withdrawal("CC", "52080323", "000000", "80", 10000);
-            exception = Assert.Throws<AspenResponseException>(InvokeWithdrawalWithoutTags);
+            exception = Assert.Throws<AspenException>(InvokeWithdrawalWithoutTags);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2598,7 +2555,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Cuando no se incluye la propiedad Tags en el body...
             void InvokeWithdrawalExcludeTagsFromBody() => ((AspenClient)client.Financial).WithdrawalAvoidingValidation("CC", "52080323", "000000", "80", 10000, null, excludeTags: true);
-            exception = Assert.Throws<AspenResponseException>(InvokeWithdrawalExcludeTagsFromBody);
+            exception = Assert.Throws<AspenException>(InvokeWithdrawalExcludeTagsFromBody);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2618,7 +2575,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawalAvoidingValidation(int invalidAmount) => ((AspenClient)client.Financial).WithdrawalAvoidingValidation("CC", "52080323", "000000", "80", invalidAmount);
 
             // Valor menor a cero...
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(-1));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2626,7 +2583,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor menor a cero...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalAvoidingValidation(0));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalAvoidingValidation(0));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2635,7 +2592,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Sin valor para la transacción...
             void InvokeWithdrawalWithoutAmount() => ((AspenClient)client.Financial).WithdrawalAvoidingValidation("CC", "52080323", "000000", "80", null, null, excludeAmount: true);
-            exception = Assert.Throws<AspenResponseException>(InvokeWithdrawalWithoutAmount);
+            exception = Assert.Throws<AspenException>(InvokeWithdrawalWithoutAmount);
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2645,7 +2602,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawalNotIntAmount(string invalidAmount) => ((AspenClient)client.Financial).WithdrawalAvoidingValidation("CC", "52080323", "000000", "80", invalidAmount);
 
             // Cuando el valor es un entero de tipo cadena...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount("0"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalNotIntAmount("0"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2653,7 +2610,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Cuando el valor es nulo, eso equivalente a cero (ya que es el valor predeterminado de un entero)...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount(null));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalNotIntAmount(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2661,7 +2618,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalNotIntAmount(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -2669,7 +2626,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount("   "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalNotIntAmount("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -2677,7 +2634,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount("XXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalNotIntAmount("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -2685,7 +2642,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando el valor es un entero de tipo cadena debe ser exitosa la validación del campo...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalNotIntAmount("10000"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalNotIntAmount("10000"));
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2694,7 +2651,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Cuando el valor es un entero pero no existe token...
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "000000", "80", 10000);
-            exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2735,7 +2692,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // Use Aspen.Autonomous: Send-TranToken -DocNumber '52080323' -DocType 'CC'
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "904085", "80", 10000);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "87000",
@@ -2763,7 +2720,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "166934", "80", int.MaxValue);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2786,7 +2743,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "408468", "80", int.MaxValue);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2809,7 +2766,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "122102", "80", 9999);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2832,7 +2789,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // 2. Genere un token manualmente:
             // Use Aspen.Delegated: Request-TranToken -Amount 10000 -AccountType '80' -PinNumber 141414
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "026676", "81", 10000);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "15875",
@@ -2857,7 +2814,7 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeWithdrawal() => client.Financial.Withdrawal("CC", "52080323", "829628", "81", 10000);
 
             // La intención es que el supere la validación del token, no importa si la transacción no es autorizada.
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawal);
             AssertAspenResponseException(
                 exception,
                 "87000",
@@ -2968,8 +2925,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.WithdrawalReversal(invalidTransactionId, "CC", "52080323", "80", 10000, tags);
 
             // Identificador de transacción nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2977,7 +2934,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TransactionId' no puede ser nulo ni vacío");
 
             // Identificador de transacción vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -2986,7 +2943,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TransactionId' no puede ser nulo ni vacío");
 
             // Identificador de transacción espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -2995,7 +2952,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Identificador de transacción con algún caracter inválido...
             string randomTransactionId = $"{Guid.Empty}-{Guid.Empty}-ñÑ+++";
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(randomTransactionId));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(randomTransactionId));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3004,7 +2961,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Identificador de transacción excede longitud...
             randomTransactionId = $"{Guid.Empty}-{Guid.Empty}-{Guid.Empty}";
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(randomTransactionId));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(randomTransactionId));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3032,8 +2989,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     tags);
 
             // Tipo de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3041,7 +2998,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3050,7 +3007,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3058,7 +3015,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3067,7 +3024,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("C"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("C"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3075,7 +3032,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'C' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("ZZZZZZ"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("ZZZZZZ"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3102,8 +3059,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.WithdrawalReversal(Guid.NewGuid().ToString(), "CC", invalidDocNumber, "80", 10000, tags);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3111,7 +3068,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3120,7 +3077,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3128,7 +3085,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3136,7 +3093,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3144,7 +3101,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3153,7 +3110,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3181,8 +3138,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     tags);
 
             // Tipo de cuenta nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3190,7 +3147,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3199,7 +3156,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3207,7 +3164,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta formato
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3215,7 +3172,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
             // Tipo de cuenta longitud
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal("8000"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3236,8 +3193,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.WithdrawalReversal(Guid.NewGuid().ToString(), "CC", "52080323", "80", 10000, tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() =>
+            AspenException exception =
+                Assert.Throws<AspenException>(() =>
                     InvokeWithdrawalReversal(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
@@ -3246,7 +3203,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversal(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
@@ -3254,7 +3211,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversal(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
@@ -3262,7 +3219,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversal(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -3270,7 +3227,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversal(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
@@ -3278,14 +3235,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(new TagsInfo(pan: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(
+            exception = Assert.Throws<AspenException>(
                 () => InvokeWithdrawalReversal(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -3293,14 +3250,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(new TagsInfo(pan: "000")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversal(new TagsInfo(pan: "00000")));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversal(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3328,8 +3285,8 @@ namespace Processa.Services.Aspen.Client.Tests
                     tags);
 
             // Valor menor a cero...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(-1));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3337,7 +3294,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor igual a cero...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(0));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(0));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -3345,7 +3302,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Sin valor
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -3353,7 +3310,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeWithdrawalReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3362,7 +3319,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -3370,7 +3327,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("XXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -3378,14 +3335,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando el valor es un entero de tipo cadena...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("-1"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("-1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Amount' debe ser mayor que cero");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeWithdrawalReversalAvoidingValidation("0"));
+            exception = Assert.Throws<AspenException>(() => InvokeWithdrawalReversalAvoidingValidation("0"));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -3417,7 +3374,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 .GetClient();
 
             string randomTransactionId = Guid.NewGuid().ToString("D");
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.WithdrawalReversal(randomTransactionId, "CC", "52080323", "80", 10000));
+            AspenException exception = Assert.Throws<AspenException>(() => client.Financial.WithdrawalReversal(randomTransactionId, "CC", "52080323", "80", 10000));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -3444,7 +3401,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // Use Aspen.Core: Get-App -AppKey 'MyAppKey' | Set-AppSetting -Key 'Bifrost:WithdrawalReversalRoutingKey' -Value 'Bifrost.CashWithdrawalReversalRequest.NotFound'
             void InvokeWithdrawalReversal() => client.Financial.WithdrawalReversal(Guid.NewGuid().ToString(), "CC", "52080323", "80", 10000);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawalReversal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawalReversal);
             AssertAspenResponseException(
                 exception,
                 "87002",
@@ -3464,7 +3421,7 @@ namespace Processa.Services.Aspen.Client.Tests
             // NOTAS:
             // 1. Esta prueba es manual y su intención es verificar la respuesta, por lo que se debe cambiar algo en el controlador para que genere excepción no controlada.
             void InvokeWithdrawalReversal() => client.Financial.WithdrawalReversal(Guid.NewGuid().ToString(), "CC", "1073688252", "80", 10000);
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(InvokeWithdrawalReversal);
+            AspenException exception = Assert.Throws<AspenException>(InvokeWithdrawalReversal);
             AssertAspenResponseException(
                 exception,
                 "87001",
@@ -3492,21 +3449,21 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeRefund(string invalidAuthNumber) =>
                 client.Financial.Refund(invalidAuthNumber, "CC", "1073688252", "80", 10000, tags);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AuthNumber' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AuthNumber' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3514,7 +3471,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AuthNumber' no puede ser nulo ni vacío");
 
             string randomAuthNumber = $"**{new Random().Next()}++";
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(randomAuthNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(randomAuthNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3522,14 +3479,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AuthNumber' debe coincidir con el patrón ^[a-zA-Z0-9]{1,10}$");
 
             randomAuthNumber = new Random().Next().ToString("00000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(randomAuthNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(randomAuthNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'AuthNumber' debe coincidir con el patrón ^[a-zA-Z0-9]{1,10}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(Guid.NewGuid().ToString()));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(Guid.NewGuid().ToString()));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3555,8 +3512,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Refund(randomAuthNumber, invalidDocType, "52080323", "80", 10000, tags);
 
             // Tipo de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3564,7 +3521,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3573,7 +3530,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3581,7 +3538,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3590,7 +3547,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("C"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("C"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3598,7 +3555,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'C' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("ZZZZZZ"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("ZZZZZZ"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3624,8 +3581,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Refund(randomAuthNumber, "CC", invalidDocNumber, "80", 10000, tags);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3633,7 +3590,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3642,7 +3599,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3650,7 +3607,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3658,7 +3615,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3666,7 +3623,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3675,7 +3632,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3701,8 +3658,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Refund(randomAuthNumber, "CC", "52080323", invalidAccountType, 10000, tags);
 
             // Tipo de cuenta nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3710,7 +3667,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3719,7 +3676,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3727,7 +3684,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta formato
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3735,7 +3692,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
             // Tipo de cuenta longitud
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund("8000"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3757,8 +3714,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.Refund(randomAuthNumber, "CC", "1073688252", "80", 10000, tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() =>
+            AspenException exception =
+                Assert.Throws<AspenException>(() =>
                     InvokeRefund(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
@@ -3767,7 +3724,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefund(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
@@ -3775,7 +3732,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefund(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
@@ -3783,7 +3740,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefund(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -3791,7 +3748,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefund(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
@@ -3799,14 +3756,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(new TagsInfo(pan: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(
+            exception = Assert.Throws<AspenException>(
                 () => InvokeRefund(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -3814,14 +3771,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(new TagsInfo(pan: "000")));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefund(new TagsInfo(pan: "00000")));
+            exception = Assert.Throws<AspenException>(() => InvokeRefund(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3844,8 +3801,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 ((AspenClient)client.Financial).RefundAvoidingValidation(randomAuthNumber, "CC", "1073688252", "80", invalidAmount, tags);
 
             // Valor menor a cero...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(-1));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3853,7 +3810,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor igual a cero...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(0));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(0));
             AssertAspenResponseException(
                 exception,
                 "15879",
@@ -3861,7 +3818,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Sin valor
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation(null));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15879",
@@ -3869,7 +3826,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -3878,7 +3835,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -3886,7 +3843,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("XXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -3894,14 +3851,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando el valor es un entero de tipo cadena...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("-1"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("-1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Amount' debe ser mayor que cero");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundAvoidingValidation("0"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundAvoidingValidation("0"));
             AssertAspenResponseException(
                 exception,
                 "15879",
@@ -3935,7 +3892,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             TagsInfo tags = new TagsInfo(cardAcceptorId: "00000014436950");
             string randomAuthNumber = (new Random().Next(100000, 999999)).ToString();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.Refund(randomAuthNumber, "CC", "1073688252", "80", 10000, tags));
+            AspenException exception = Assert.Throws<AspenException>(() => client.Financial.Refund(randomAuthNumber, "CC", "1073688252", "80", 10000, tags));
             AssertAspenResponseException(
                 exception,
                 "15879",
@@ -3968,21 +3925,21 @@ namespace Processa.Services.Aspen.Client.Tests
             void InvokeRefundReversal(string invalidTransactionId) =>
                 client.Financial.RefundReversal(invalidTransactionId, "CC", "1073688252", "80", 10000, tags);
 
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(null));
+            AspenException exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'TransactionId' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(string.Empty));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'TransactionId' no puede ser nulo ni vacío");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3990,7 +3947,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TransactionId' no puede ser nulo ni vacío");
 
             string randomTransactionId = $"**{Guid.Empty}++";
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(randomTransactionId));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(randomTransactionId));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -3998,7 +3955,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TransactionId' debe coincidir con el patrón ^[a-zA-Z0-9\,\.\-\{\}\\]{1,68}$");
 
             randomTransactionId = $"{Guid.Empty}-{Guid.Empty}-{Guid.Empty}";
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(randomTransactionId));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(randomTransactionId));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4024,8 +3981,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RefundReversal(randomAuthNumber, invalidDocType, "52080323", "80", 10000, tags);
 
             // Tipo de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4033,7 +3990,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -4042,7 +3999,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4050,7 +4007,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocType' no puede ser nulo ni vacío");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4059,7 +4016,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("C"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("C"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4067,7 +4024,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'C' no se reconoce como un tipo de identificación");
 
             // Tipo de documento no reconocido...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("ZZZZZZ"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("ZZZZZZ"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4093,8 +4050,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RefundReversal(randomAuthNumber, "CC", invalidDocNumber, "80", 10000, tags);
 
             // Número de documento nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4102,7 +4059,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -4111,7 +4068,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4119,7 +4076,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' no puede ser nulo ni vacío");
 
             // Número de documento solo letras...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("XXXXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("XXXXX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4127,7 +4084,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento letras y números...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("X1X2X3X4X5"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("X1X2X3X4X5"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4135,7 +4092,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'DocNumber' debe coincidir con el patrón ^\d{1,18}$");
 
             // Número de documento números y espacios...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(" 123 456 "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(" 123 456 "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4144,7 +4101,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             // Número de documento excede longitud...
             string randomDocNumber = new Random().Next().ToString("00000000000000000000");
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(randomDocNumber));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(randomDocNumber));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4170,8 +4127,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RefundReversal(randomAuthNumber, "CC", "52080323", invalidAccountType, 10000, tags);
 
             // Tipo de cuenta nulo...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(null));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4179,7 +4136,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta vacío...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -4188,7 +4145,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta espacios en blanco...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("    "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("    "));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4196,7 +4153,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' no puede ser nulo ni vacío");
 
             // Tipo de cuenta formato
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("XX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("XX"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4204,7 +4161,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'AccountType' debe coincidir con el patrón ^\d{1,3}$");
 
             // Tipo de cuenta longitud
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal("8000"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal("8000"));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4226,8 +4183,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 client.Financial.RefundReversal(randomAuthNumber, "CC", "1073688252", "80", 10000, tagsInfo);
 
             string terminalId = "X".PadRight(9, 'X');
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() =>
+            AspenException exception =
+                Assert.Throws<AspenException>(() =>
                     InvokeRefundReversal(new TagsInfo(terminalId: terminalId)));
             AssertAspenResponseException(
                 exception,
@@ -4236,7 +4193,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'TerminalId' no tiene un formato valido. Debe tener la forma ^\w{1,8}$");
 
             string cardAcceptorId = "X".PadRight(16, 'X');
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversal(new TagsInfo(cardAcceptorId: cardAcceptorId)));
             AssertAspenResponseException(
                 exception,
@@ -4244,7 +4201,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CardAcceptorId' no tiene un formato valido. Debe tener la forma ^\w{1,15}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversal(new TagsInfo(customerGroup: "XX")));
             AssertAspenResponseException(
                 exception,
@@ -4252,7 +4209,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversal(new TagsInfo(customerGroup: "ZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -4260,7 +4217,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversal(new TagsInfo(customerGroup: "800")));
             AssertAspenResponseException(
                 exception,
@@ -4268,14 +4225,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'CustomerGroup' no tiene un formato valido. Debe tener la forma ^\d{1,2}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(new TagsInfo(pan: "XX")));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(new TagsInfo(pan: "XX")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(
+            exception = Assert.Throws<AspenException>(
                 () => InvokeRefundReversal(new TagsInfo(pan: "ZZZZZZZZ")));
             AssertAspenResponseException(
                 exception,
@@ -4283,14 +4240,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(new TagsInfo(pan: "000")));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(new TagsInfo(pan: "000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Pan' no tiene un formato valido. Debe tener la forma ^\d{4}$");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversal(new TagsInfo(pan: "00000")));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversal(new TagsInfo(pan: "00000")));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4313,8 +4270,8 @@ namespace Processa.Services.Aspen.Client.Tests
                 ((AspenClient)client.Financial).RefundReversalAvoidingValidation(randomAuthNumber, "CC", "1073688252", "80", invalidAmount, tags);
 
             // Valor menor a cero...
-            AspenResponseException exception =
-                Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(-1));
+            AspenException exception =
+                Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(-1));
             AssertAspenResponseException(
                 exception,
                 "15852",
@@ -4322,7 +4279,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"'Amount' debe ser mayor que cero");
 
             // Valor igual a cero...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(0));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(0));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -4330,7 +4287,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Sin valor
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation(null));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation(null));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -4338,7 +4295,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 "No se encontró una transacción");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() =>
+            exception = Assert.Throws<AspenException>(() =>
                 InvokeRefundReversalAvoidingValidation(string.Empty));
             AssertAspenResponseException(
                 exception,
@@ -4347,7 +4304,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("   "));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("   "));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -4355,7 +4312,7 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando no es un valor entero falla la serialización...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("XXX"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("XXX"));
             AssertAspenResponseException(
                 exception,
                 "15883",
@@ -4363,14 +4320,14 @@ namespace Processa.Services.Aspen.Client.Tests
                 @"Valor inesperado al analizar los datos de solicitud en formato JSON");
 
             // Cuando el valor es un entero de tipo cadena...
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("-1"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("-1"));
             AssertAspenResponseException(
                 exception,
                 "15852",
                 HttpStatusCode.BadRequest,
                 @"'Amount' debe ser mayor que cero");
 
-            exception = Assert.Throws<AspenResponseException>(() => InvokeRefundReversalAvoidingValidation("0"));
+            exception = Assert.Throws<AspenException>(() => InvokeRefundReversalAvoidingValidation("0"));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -4389,7 +4346,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             TagsInfo tags = new TagsInfo(cardAcceptorId: "00000014436950");
             string randomTransactionId = Guid.NewGuid().ToString();
-            AspenResponseException exception = Assert.Throws<AspenResponseException>(() => client.Financial.RefundReversal(randomTransactionId, "CC", "1073688252", "80", 10000, tags));
+            AspenException exception = Assert.Throws<AspenException>(() => client.Financial.RefundReversal(randomTransactionId, "CC", "1073688252", "80", 10000, tags));
             AssertAspenResponseException(
                 exception,
                 "15880",
@@ -4510,7 +4467,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string invalidDocType in invalidDocTypes)
             {
-                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(invalidDocType));
+                AspenException exc = Assert.Throws<AspenException>(() => LinkTransferAccount(invalidDocType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
                 StringAssert.IsMatch("Tipo de documento en la URL no es reconocido", exc.Message);
@@ -4537,7 +4494,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string invalidDocType in invalidDocTypes)
             {
-                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(invalidDocType));
+                AspenException exc = Assert.Throws<AspenException>(() => LinkTransferAccount(invalidDocType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
                 StringAssert.IsMatch("Tipo de documento en el BODY no es reconocido", exc.Message);
@@ -4564,7 +4521,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string invalidDocType in invalidDocTypes)
             {
-                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(invalidDocType));
+                AspenException exc = Assert.Throws<AspenException>(() => LinkTransferAccount(invalidDocType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
                 StringAssert.IsMatch("'DocType' no puede ser nulo ni vacío", exc.Message);
@@ -4591,7 +4548,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string invalidDocType in invalidDocTypes)
             {
-                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(invalidDocType));
+                AspenException exc = Assert.Throws<AspenException>(() => LinkTransferAccount(invalidDocType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
                 StringAssert.IsMatch("'DocNumber' no puede ser nulo ni vacío", exc.Message);
@@ -4619,7 +4576,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string invalidDocType in invalidDocTypes)
             {
-                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(invalidDocType));
+                AspenException exc = Assert.Throws<AspenException>(() => LinkTransferAccount(invalidDocType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
                 StringAssert.IsMatch("'Alias' no puede ser nulo ni vacío", exc.Message);
@@ -4640,7 +4597,7 @@ namespace Processa.Services.Aspen.Client.Tests
                                               .GetClient();
 
             var accountInfo = new TransferAccountRequestRequestInfo("CC", "79483129");
-            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount("CC", "79483129", accountInfo));
+            AspenException exc = Assert.Throws<AspenException>(() => client.Management.LinkTransferAccount("CC", "79483129", accountInfo));
             AssertAspenResponseException(exc, "15884", HttpStatusCode.NotAcceptable, "Tarjetahabiente origen y destino son el mismo");
         }
 
@@ -4688,7 +4645,7 @@ namespace Processa.Services.Aspen.Client.Tests
 
             foreach (string invalidDocType in invalidDocTypes)
             {
-                AspenResponseException exc = Assert.Throws<AspenResponseException>(() => LinkTransferAccount(invalidDocType));
+                AspenException exc = Assert.Throws<AspenException>(() => LinkTransferAccount(invalidDocType));
                 Assert.That(exc.StatusCode, Is.EqualTo(HttpStatusCode.NotAcceptable));
                 Assert.That(exc.EventId, Is.EqualTo("15867"));
                 StringAssert.IsMatch("'Alias' incluye caracteres inválidos", exc.Message);
@@ -4730,14 +4687,14 @@ namespace Processa.Services.Aspen.Client.Tests
             Assert.DoesNotThrow(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
 
             // Si se intenta registrar de nuevo no debe funcionar..
-            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
+            AspenException exc = Assert.Throws<AspenException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
             StringAssert.IsMatch($"Ya existe una cuenta registrada con el nombre '{alias}'", exc.Message);
             Assert.That(exc.EventId, Is.EqualTo("15853"));
 
             // Si se intenta registrar de nuevo con otro nombre no debe funcionar.
             string newAlias = $"Otro alias {new Random().Next(1, 100):000}";
             accountInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, RecognizedDocNumber, newAlias);
-            exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
+            exc = Assert.Throws<AspenException>(() => client.Management.LinkTransferAccount(randomDocType, randomDocNumber, accountInfo));
             StringAssert.IsMatch("Cuenta ya está registrada con otro alias", exc.Message);
             Assert.That(exc.EventId, Is.EqualTo("15863"));
 
@@ -4772,7 +4729,7 @@ namespace Processa.Services.Aspen.Client.Tests
             const string RecognizedDocType = "CC";
             ITransferAccountRequestInfo unknownAccountRequestInfo = new TransferAccountRequestRequestInfo(RecognizedDocType, unrecognizedDocNumber, alias);
             string randomDocNumber = new Random().Next().ToString("000000000000");
-            AspenResponseException exc = Assert.Throws<AspenResponseException>(() => client.Management.LinkTransferAccount("CC", randomDocNumber, unknownAccountRequestInfo));
+            AspenException exc = Assert.Throws<AspenException>(() => client.Management.LinkTransferAccount("CC", randomDocNumber, unknownAccountRequestInfo));
             StringAssert.IsMatch("No se encuentra información de la cuenta con los datos suministrados", exc.Message);
             Assert.That(exc.EventId, Is.EqualTo("15856"));
         }

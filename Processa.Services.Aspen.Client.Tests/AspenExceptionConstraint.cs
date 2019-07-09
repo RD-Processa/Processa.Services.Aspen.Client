@@ -54,7 +54,7 @@ namespace Processa.Services.Aspen.Client.Tests
         /// <returns>Instancia de <see cref="ConstraintResult" /> con los resultados de las validaciones.</returns>
         public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
-            AspenResponseException aspenException = actual as AspenResponseException;
+            AspenException aspenException = actual as AspenException;
             Assert.That(aspenException?.StatusCode, NUnit.Framework.Is.EqualTo(this.httpStatusCode));
             Assert.That(aspenException?.EventId, NUnit.Framework.Is.Not.Null.And.Match(this.eventId));
             Assert.That(aspenException?.Message, NUnit.Framework.Is.Not.Null.And.Match(this.message));
